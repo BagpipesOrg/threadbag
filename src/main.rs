@@ -1,25 +1,26 @@
+use crate::database::db::DBhandler;
 use actix_rt::spawn;
 use actix_web::{get, middleware, rt::Runtime, web, App, HttpResponse, HttpServer};
 use tokio::time::Duration;
 //use futures::channel::mpsc;
 use tokio::sync::mpsc; // use tokio's mpsc channel
-                       //use tokio::runtime::Runtime;
+
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::time::sleep;
 
-
-
 //mod cli;
 //use cli::print_banner;
-
-mod tx_format;
 mod chains;
+pub mod database;
+mod error;
+mod scenarios;
+mod tests;
+mod tx_format;
 
 // get the slashes
 mod routes;
-use routes::{info, get_url, dot_openchannels, broadcast_tx, save_url, xcm_asset_transfer};
-
+use routes::{broadcast_tx, dot_openchannels, get_url, info, save_url, xcm_asset_transfer};
 
 #[derive(Debug)]
 struct ThreadInfo {
@@ -33,7 +34,6 @@ enum Command {
     Start { job: String },
     Stop { job: String },
 }
-
 
 async fn dummy_thread(tx: tokio::sync::mpsc::Sender<Command>, ready: Arc<tokio::sync::Mutex<()>>) {
     // Wait for task_manager to be ready
@@ -58,11 +58,12 @@ async fn dummy_thread(tx: tokio::sync::mpsc::Sender<Command>, ready: Arc<tokio::
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-  //  print_banner();
+    //  print_banner();
     // Explicitly specify the type for the channel
     // let (_panic_sender, mut _panic_receiver): (mpsc::Sender<&str>, mpsc::Receiver<&str>) = mpsc::channel(1);
     let (tx, mut rx) = mpsc::channel::<Command>(32);
-  //  let tx2 = tx.clone();
+    let db_handler = DBhandler {};
+    //  let tx2 = tx.clone();
     let tx3 = tx.clone();
 
     let http_handle = actix_rt::spawn(async move {
@@ -71,13 +72,14 @@ async fn main() -> std::io::Result<()> {
             App::new()
                 //   .app_data(thread_info_clone.clone()) // Pass shared data to the app
                 .wrap(middleware::Compress::default())
-             //   .service(status)
-            //    .service(status3)
-             //   .service(thread_status)
-              //  .service(status2)
+                //   .service(status)
+                //    .service(status3)
+                //   .service(thread_status)
+                //  .service(status2)
                 .service(xcm_asset_transfer)
                 .service(get_url)
-                .service(save_url)
+                .app_data(web::Data::new(db_handler.clone()))
+                .service(save_url) // Explicitly specify the handler for the route
                 .service(broadcast_tx)
                 .service(dot_openchannels)
                 .service(info)
@@ -97,7 +99,7 @@ async fn main() -> std::io::Result<()> {
             job: "sending from second handle".to_string(),
         })
         .await;
-        ready.lock().await; // Notify task_manager that it is ready
+        let _ = ready.lock().await; // Notify task_manager that it is ready
     });
     //spanning thread
     let dummy_thread_handle = tokio::spawn(async move {
@@ -123,7 +125,7 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
-     // Wait for all threads to finish
+    // Wait for all threads to finish
 
     tokio::try_join!(dummy_thread_handle, task_manager_handle)?;
     tokio::try_join!(http_handle)?;
