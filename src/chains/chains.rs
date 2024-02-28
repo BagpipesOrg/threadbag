@@ -1,19 +1,16 @@
-
 pub struct chain_info {
-    rpc_endoints: Vec<String>
+    rpc_endoints: Vec<String>,
 }
-
 
 pub enum chains {
     hydradx,
     polkadot,
     interlay,
-    assethub
+    assethub,
 }
 
-/// return the rpc endpoint to use 
-pub fn get_rpc_endpoint(){
-
+/// return the rpc endpoint to use
+pub fn get_rpc_endpoint() {
     let hydradx = vec![
         "wss://hydradx-rpc.dwellir.com",
         "wss://hydradx.api.onfinality.io/public-ws",

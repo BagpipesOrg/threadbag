@@ -1,0 +1,34 @@
+use actix_web::{web, HttpResponse, Responder};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize)]
+pub struct Urldata {
+    pub url: String,
+}
+
+// /saveUrl response output
+#[derive(Debug, Deserialize, Serialize)]
+pub struct UrlResponse {
+    pub success: bool,
+    pub shortUrl: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ScenarioRequest {
+    source_chain: String,
+    dest_chain: String,
+    source_address: String,
+    amount: u64,
+    assetid: u64,
+}
+
+#[derive(Serialize)]
+pub struct ScenarioResponse {
+    success: bool,
+    message: String,
+}
+
+#[derive(Serialize, Debug, Deserialize)]
+pub struct ScenarioInfo {
+    pub id: String,
+}

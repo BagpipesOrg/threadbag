@@ -1,2 +1,2 @@
-pub mod xcm;
 pub mod generic;
+pub mod xcm;
