@@ -13,6 +13,13 @@ pub struct UrlResponse {
     pub shortUrl: String,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GetUrlResponse {
+    pub success: bool,
+    pub longUrl: String,
+}
+
+
 #[derive(Debug, Deserialize)]
 pub struct ScenarioRequest {
     source_chain: String,

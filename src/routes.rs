@@ -1,6 +1,6 @@
 // HTTP Endpoint routes
 use crate::database::db::DBhandler;
-use crate::database::types::{ScenarioInfo, UrlResponse, Urldata};
+use crate::database::types::{ScenarioInfo, GetUrlResponse, UrlResponse, Urldata};
 use actix_web::{get, post, web, HttpResponse, Result};
 
 #[get("/")]
@@ -39,20 +39,30 @@ pub async fn save_url(
 }
 
 #[get("/getUrl/{name}")]
-pub async fn get_url(name: web::Path<String>, db: web::Data<DBhandler>) -> HttpResponse {
+pub async fn get_url(name: web::Path<String>, db: web::Data<DBhandler>) -> web::Json<GetUrlResponse> {
     let fluff = format!("Todo {name}!");
     println!("{:?}", fluff);
 
     match db.get_entry(name.to_string()) {
-        Ok(Result) => {
-            return HttpResponse::Ok().body("Found entry!");
+        Ok(out) => {
+            println!("Output: {:?}", out);
+            return web::Json(GetUrlResponse {
+                success: true,
+                longUrl: out.to_owned(),
+            })
+           // return HttpResponse::Ok().body("Found entry!");
         }
         Err(err) => {
-            return HttpResponse::Ok().body("Entry not found");
-        }
+            web::Json(GetUrlResponse {
+                success: false,
+                longUrl: "not found".to_string(),
+            })        }
     };
 
-    HttpResponse::Ok().body("Todo!")
+    web::Json(GetUrlResponse {
+        success: false,
+        longUrl: "not found".to_string(),
+    }) 
 }
 
 #[post("/xcm-asset-transfer")]
