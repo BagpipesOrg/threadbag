@@ -1,6 +1,11 @@
 // HTTP Endpoint routes
 use crate::database::db::DBhandler;
-use crate::database::types::{ScenarioInfo, GetUrlResponse, UrlResponse, Urldata};
+use crate::database::decode::decompress_string;
+use crate::database::types::{
+    job_start, GenericOut, GetUrlResponse, ScenarioInfo, UrlResponse, Urldata,
+};
+use crate::scenarios::scenario_parse::scenario_information;
+use crate::scenarios::scenario_types::Graph;
 use actix_web::{get, post, web, HttpResponse, Result};
 
 #[get("/")]
@@ -30,8 +35,6 @@ pub async fn save_url(
     println!("Data saved!");
     println!("Short id generated: {:?}", shortid);
 
-    // DBhandler::
-    // Ok(HttpResponse::Ok().json(UrlResponse{ success: true, shortUrl: shortid}))
     web::Json(UrlResponse {
         success: true,
         shortUrl: shortid.to_owned(),
@@ -39,7 +42,10 @@ pub async fn save_url(
 }
 
 #[get("/getUrl/{name}")]
-pub async fn get_url(name: web::Path<String>, db: web::Data<DBhandler>) -> web::Json<GetUrlResponse> {
+pub async fn get_url(
+    name: web::Path<String>,
+    db: web::Data<DBhandler>,
+) -> web::Json<GetUrlResponse> {
     let fluff = format!("Todo {name}!");
     println!("{:?}", fluff);
 
@@ -49,20 +55,19 @@ pub async fn get_url(name: web::Path<String>, db: web::Data<DBhandler>) -> web::
             return web::Json(GetUrlResponse {
                 success: true,
                 longUrl: out.to_owned(),
-            })
-           // return HttpResponse::Ok().body("Found entry!");
+            });
+            // return HttpResponse::Ok().body("Found entry!");
         }
-        Err(err) => {
-            web::Json(GetUrlResponse {
-                success: false,
-                longUrl: "not found".to_string(),
-            })        }
+        Err(err) => web::Json(GetUrlResponse {
+            success: false,
+            longUrl: "not found".to_string(),
+        }),
     };
 
     web::Json(GetUrlResponse {
         success: false,
         longUrl: "not found".to_string(),
-    }) 
+    })
 }
 
 #[post("/xcm-asset-transfer")]
@@ -70,13 +75,60 @@ pub async fn xcm_asset_transfer() -> HttpResponse {
     HttpResponse::Ok().body("Todo!")
 }
 
+#[post("/job/start")]
+pub async fn start_job(
+    data: web::Json<job_start>,
+    db: web::Data<DBhandler>,
+) -> web::Json<GenericOut> {
+    let my_data: job_start = data.into_inner();
+
+    return web::Json(GenericOut {
+        success: true,
+        result: "Job started".to_string(),
+    });
+}
+
 #[post("/scenario/info/")]
-pub async fn scenario_info(data: web::Json<ScenarioInfo>) -> HttpResponse {
+pub async fn scenario_info(
+    data: web::Json<ScenarioInfo>,
+    db: web::Data<DBhandler>,
+) -> web::Json<GenericOut> {
+    println!("scenario info got input: {:?}", data);
+    let name = data.into_inner().id;
     // geturl
+    match db.get_entry(name.to_string()) {
+        Ok(out) => {
+            println!("Output: {:?}", out);
 
-    // decode blob
+            // decode blob
+            let decoded = decompress_string(out)
+                .await
+                .expect("Failed to decompress string, invalid value");
 
-    // parse scenario
+            // Decoded diagram data json
+            let graph: Graph =
+                serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
 
-    HttpResponse::Ok().body("wip")
+            println!("decoded okay");
+            // parse scenario
+            let output_string = scenario_information(graph).expect("could not parse scenario");
+
+            return web::Json(GenericOut {
+                success: true,
+                result: output_string,
+            });
+        }
+        Err(err) => {
+            return web::Json(GenericOut {
+                success: false,
+                result: "not found".to_string(),
+            })
+        }
+    };
+
+    return web::Json(GenericOut {
+        success: false,
+        result: "not found".to_string(),
+    });
+    //HttpResponse::Ok().body("wip")
 }
