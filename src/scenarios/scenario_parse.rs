@@ -1,87 +1,61 @@
+use crate::error::Error;
+use crate::scenarios::scenario_types::{Graph, ScenarioSummary, TxType};
 use getrandom::getrandom;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
-struct ChainNode {
-    id: String,
-    r#type: String,
-    position: Position,
-    data: NodeData,
-    style: serde_json::Value, // Adjust the type as needed
-    formData: FormData,
-    width: f64,
-    height: f64,
-    selected: bool,
-    position_absolute: Position,
-    dragging: bool,
+// scenario_info
+pub fn scenario_information(inputen: Graph) -> Result<String, Error> {
+    let mut chain_list: Vec<String> = Vec::new();
+
+    for node in inputen.nodes {
+        if node.r#type == "chain" {
+            if let Some(formData) = node.formData {
+                chain_list.push(formData.chain.unwrap());
+            }
+        } else if node.r#type == "action" && node.formData.is_some() {
+            if let Some(action) = node.formData.unwrap().action {
+                chain_list.push(action);
+            }
+        }
+    }
+    let formatted_chain_list = chain_list.join(" > ");
+    Ok(formatted_chain_list)
 }
 
-#[derive(Debug, Deserialize)]
-struct Position {
-    x: f64,
-    y: f64,
-}
+pub fn multi_scenario_info(scenario_data: &Graph) -> Vec<ScenarioSummary> {
+    let mut alles: Vec<ScenarioSummary> = Vec::new();
 
-#[derive(Debug, Deserialize)]
-struct NodeData {
-    label: String,
-    image: String,
-    name: String,
-}
+    for node in &scenario_data.nodes {
+        if node.r#type == "action"
+            && node.formData.is_some()
+            && node.formData.as_ref().unwrap().actionData.is_some()
+        {
+            let action_data = node.formData.as_ref().unwrap().actionData.as_ref().unwrap();
 
-#[derive(Debug, serde::Deserialize)]
-struct Data {
-    label: String,
-    triggerToast: Option<bool>,
-    image: Option<String>,
-    name: Option<String>,
-}
+            let mut tmp_scenario = ScenarioSummary {
+                source_chain: "not set".to_string(),
+                source_address: "not set".to_string(),
+                dest_chain: "not set".to_string(),
+                dest_address: "not set".to_string(),
+                assetid: "0".to_string(), // assuming assetId is a number
+                amount: "0".to_string(),
+                txtype: TxType::swap,
+                tx: "not set".to_string(),
+            };
 
-#[derive(Debug, Deserialize)]
-struct FormData {
-    chain: String,
-    asset: Asset,
-    address: String,
-    amount: String,
-    delay: Option<serde_json::Value>,   // Adjust the type as needed
-    contact: Option<serde_json::Value>, // Adjust the type as needed
-}
+            tmp_scenario.txtype = action_data.actionType.clone().into();
+            tmp_scenario.amount = action_data.source.amount.clone();
+            tmp_scenario.assetid = action_data.source.assetId.clone().into();
+            tmp_scenario.source_address = action_data.source.address.clone();
+            tmp_scenario.dest_address = action_data.target.address.clone().expect("no dest_addr");
+            tmp_scenario.source_chain = action_data.source.chain.clone();
+            tmp_scenario.dest_chain = action_data.target.chain.clone();
 
-#[derive(Debug, Deserialize)]
-struct Asset {
-    name: String,
-    asset_id: u32,
-    symbol: Option<String>,
-}
+            alles.push(tmp_scenario);
+        }
+    }
 
-#[derive(Debug)]
-enum TxType {
-    xTransfer,
-    swap,
-}
-
-#[derive(Debug, Deserialize)]
-struct scenario_summary {
-    source_chain: String,
-    source_address: String, // senders address
-    dest_chain: String,     // destination chain
-    dest_address: String,   // destination address
-    assetid: Option<String>,
-    amount: Option<String>, // transfer amount
-    txtype: String,         // would be enum in rust..
-    tx: String,             // hex tx
-}
-
-#[derive(Debug)]
-struct ScenarioSummary {
-    source_chain: String,
-    source_address: String,
-    dest_chain: String,
-    dest_address: String,
-    asset_id: String, // This can be a string or a number in Rust
-    amount: String,   // This can be a string or a number in Rust
-    txtype: TxType,   // Enum representing txtype
-    tx: String,
+    alles
 }
 
 pub fn generate_random_id() -> String {

@@ -61,3 +61,9 @@ MMMMMMMMMMMMMOckWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 Multithreaded work server for Bagpipes. 
 
 Subxt, actix-web, tokio runtime
+
+
+## Run tests:
+```shell
+$ cargo test -- --nocapture
+```

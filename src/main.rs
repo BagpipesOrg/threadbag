@@ -17,44 +17,20 @@ mod error;
 mod scenarios;
 mod tests;
 mod tx_format;
+mod jobs;
+
+use jobs::types::{Command, ThreadInfo};
+use jobs::jobs::{dummy_thread};
 
 // get the slashes
 mod routes;
-use routes::{broadcast_tx, dot_openchannels, get_url, info, save_url, xcm_asset_transfer};
+use routes::{
+    broadcast_tx, dot_openchannels, get_url, info, save_url, start_job, xcm_asset_transfer,
+};
 
-#[derive(Debug)]
-struct ThreadInfo {
-    name: String,
-    // Add more information about the thread if needed
-}
 
-#[derive(Debug)]
-enum Command {
-    Status { job: String },
-    Start { job: String },
-    Stop { job: String },
-}
 
-async fn dummy_thread(tx: tokio::sync::mpsc::Sender<Command>, ready: Arc<tokio::sync::Mutex<()>>) {
-    // Wait for task_manager to be ready
-    ready.lock().await;
 
-    loop {
-        // can_incr.increment();
-        println!("Task manager is alive");
-
-        if let Err(err) = tx
-            .send(Command::Start {
-                job: "scenarioid from test".to_string(),
-            })
-            .await
-        {
-            eprintln!("Failed to send command: {}", err);
-        }
-
-        sleep(Duration::from_secs(5)).await;
-    }
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -82,6 +58,7 @@ async fn main() -> std::io::Result<()> {
                 .service(save_url) // Explicitly specify the handler for the route
                 .service(broadcast_tx)
                 .service(dot_openchannels)
+                .service(start_job)
                 .service(info)
         })
         .bind(("127.0.0.1", 8081))

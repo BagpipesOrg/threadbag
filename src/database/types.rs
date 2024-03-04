@@ -14,11 +14,22 @@ pub struct UrlResponse {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct job_start {
+    pub scenario_id: String,
+    pub delay: f32, // 32 should be enough
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct GetUrlResponse {
     pub success: bool,
     pub longUrl: String,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GenericOut {
+    pub success: bool,
+    pub result: String,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct ScenarioRequest {
