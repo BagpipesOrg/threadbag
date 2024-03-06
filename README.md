@@ -62,8 +62,9 @@ Multithreaded work server for Bagpipes.
 
 Subxt, actix-web, tokio runtime
 
+*use the make file*   
 
 ## Run tests:
 ```shell
-$ cargo test -- --nocapture
+$ make test 
 ```
