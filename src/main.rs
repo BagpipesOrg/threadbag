@@ -1,11 +1,11 @@
 use crate::database::db::DBhandler;
 use actix_rt::spawn;
 use actix_web::{get, middleware, rt::Runtime, web, App, HttpResponse, HttpServer};
-use tokio::time::Duration;
+//use tokio::time::Duration;
 //use futures::channel::mpsc;
 use tokio::sync::mpsc; // use tokio's mpsc channel
 
-use std::collections::HashMap;
+//use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::time::sleep;
 
@@ -14,23 +14,21 @@ use tokio::time::sleep;
 mod chains;
 pub mod database;
 mod error;
+mod jobs;
 mod scenarios;
 mod tests;
 mod tx_format;
-mod jobs;
 
+use jobs::jobs::{dummy_thread, start_job_worker};
+use jobs::threads::ThreadManager;
 use jobs::types::{Command, ThreadInfo};
-use jobs::jobs::{dummy_thread};
 
 // get the slashes
 mod routes;
 use routes::{
-    broadcast_tx, dot_openchannels, get_url, info, save_url, start_job, xcm_asset_transfer,
+    broadcast_tx, dot_openchannels, get_url, info, list_single_thread, save_url, start_job,
+    xcm_asset_transfer,
 };
-
-
-
-
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -38,7 +36,19 @@ async fn main() -> std::io::Result<()> {
     // Explicitly specify the type for the channel
     // let (_panic_sender, mut _panic_receiver): (mpsc::Sender<&str>, mpsc::Receiver<&str>) = mpsc::channel(1);
     let (tx, mut rx) = mpsc::channel::<Command>(32);
+    // sled db handler
     let db_handler = DBhandler {};
+
+    // thread manager | latest
+    let thread_manager = Arc::new(ThreadManager::new());
+    // spawn test thread
+    thread_manager.spawn("Thread 1".to_string(), async {
+        sleep(Duration::from_secs(5 * 1111)).await
+    });
+
+    // let subscriber = tracing_subscriber::FmtSubscriber::new();
+    //tracing::subscriber::set_global_default(subscriber)?;
+
     //  let tx2 = tx.clone();
     let tx3 = tx.clone();
 
@@ -48,18 +58,16 @@ async fn main() -> std::io::Result<()> {
             App::new()
                 //   .app_data(thread_info_clone.clone()) // Pass shared data to the app
                 .wrap(middleware::Compress::default())
-                //   .service(status)
-                //    .service(status3)
-                //   .service(thread_status)
-                //  .service(status2)
+                .app_data(web::Data::new(Arc::clone(&thread_manager)))
+                .app_data(web::Data::new(db_handler.clone()))
                 .service(xcm_asset_transfer)
                 .service(get_url)
-                .app_data(web::Data::new(db_handler.clone()))
                 .service(save_url) // Explicitly specify the handler for the route
                 .service(broadcast_tx)
                 .service(dot_openchannels)
                 .service(start_job)
                 .service(info)
+                .service(list_single_thread)
         })
         .bind(("127.0.0.1", 8081))
         .expect("could not bind")
@@ -68,6 +76,7 @@ async fn main() -> std::io::Result<()> {
         .await
     });
 
+    // old remove
     let ready = Arc::new(tokio::sync::Mutex::new(()));
     let ready_clone = ready.clone();
     tokio::spawn(async move {
@@ -96,6 +105,7 @@ async fn main() -> std::io::Result<()> {
                 }
                 Start { job } => {
                     let outme = format!("Starting job: {:?}", job);
+                    // start_job_worker
                     println!("{}", outme);
                 }
             }

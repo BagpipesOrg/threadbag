@@ -1,5 +1,3 @@
-
-
 #[derive(Debug)]
 pub struct ThreadInfo {
     name: String,
