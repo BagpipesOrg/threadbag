@@ -70,30 +70,24 @@ $ make test
 ```
 ## Run checks: 
 ```shell
-$ make test 
+$ make check 
 ```
-check:
-	cargo hack check --no-dev-deps --release
+
 
 ## Format code
 ```shell
 $ make fmt 
 ```
-fmt: 
-	cargo +nightly fmt --all
+
 
 ## Build repo
 ```shell
-$ make test 
+$ make build 
 ```
-build: 
-	cargo build --release
+
 
 ## Check dependencies  
 ```shell
-$ make test 
+$ make checkdep 
 ```
-checkdep:
-	cargo +nightly udeps
-
 
