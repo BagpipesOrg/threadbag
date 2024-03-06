@@ -60,7 +60,7 @@ MMMMMMMMMMMMMOckWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 
 Multithreaded work server for Bagpipes. 
 
-Subxt, actix-web, tokio runtime
+Made with: Tokio, Sled, Subxt and actix-web  
 
 *use the make file*   
 
