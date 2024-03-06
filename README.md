@@ -74,19 +74,19 @@ $ make check
 ```
 
 
-## Format code
+## Format code:
 ```shell
 $ make fmt 
 ```
 
 
-## Build repo
+## Build repo:
 ```shell
 $ make build 
 ```
 
 
-## Check dependencies  
+## Check dependencies:  
 ```shell
 $ make checkdep 
 ```
