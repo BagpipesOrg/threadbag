@@ -1,4 +1,8 @@
+#![allow(non_snake_case)]
+
 use serde::{Deserialize, Serialize};
+
+
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Graph {
@@ -91,6 +95,7 @@ pub struct ActionData {
     pub source: Source,
     pub target: Target,
 }
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Source {
