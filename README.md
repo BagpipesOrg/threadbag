@@ -68,3 +68,26 @@ Made with: Tokio, Sled, Subxt and actix-web
 ```shell
 $ make test 
 ```
+## Run checks: 
+```shell
+$ make check 
+```
+
+
+## Format code:
+```shell
+$ make fmt 
+```
+
+
+## Build repo:
+```shell
+$ make build 
+```
+
+
+## Check dependencies:  
+```shell
+$ make checkdep 
+```
+
