@@ -4,7 +4,7 @@ use crate::database::decode::decompress_string;
 use crate::database::types::{
     job_start, GenericOut, GetUrlResponse, ScenarioInfo, UrlResponse, Urldata,
 };
-use crate::jobs::threads::{ThreadInfo, ThreadManager, thread_status};
+use crate::jobs::threads::{ThreadManager, thread_status}; // ThreadInfo
 use crate::scenarios::scenario_parse::scenario_information;
 use crate::scenarios::scenario_types::Graph;
 use actix_web::{get, post, web, HttpResponse, Result};

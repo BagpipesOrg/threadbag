@@ -12,12 +12,13 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) {
     }
 }
 
+//change me
 pub async fn dummy_thread(
     tx: tokio::sync::mpsc::Sender<Command>,
     ready: Arc<tokio::sync::Mutex<()>>,
 ) {
     // Wait for task_manager to be ready
-    ready.lock().await;
+    let _ = ready.lock().await;
 
     loop {
         // can_incr.increment();
