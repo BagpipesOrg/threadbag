@@ -68,3 +68,32 @@ Made with: Tokio, Sled, Subxt and actix-web
 ```shell
 $ make test 
 ```
+## Run checks: 
+```shell
+$ make test 
+```
+check:
+	cargo hack check --no-dev-deps --release
+
+## Format code
+```shell
+$ make fmt 
+```
+fmt: 
+	cargo +nightly fmt --all
+
+## Build repo
+```shell
+$ make test 
+```
+build: 
+	cargo build --release
+
+## Check dependencies  
+```shell
+$ make test 
+```
+checkdep:
+	cargo +nightly udeps
+
+
