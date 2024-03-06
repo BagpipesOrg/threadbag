@@ -13,11 +13,11 @@ pub struct ThreadManager {
 #[derive(Debug, Clone, Serialize)]
 pub struct ThreadInfo {
     name: String,
-    latest_status: status,
+    latest_status: thread_status,
 }
 
 #[derive(Debug, Clone, Serialize, Copy)]
-pub enum status {
+pub enum thread_status {
     Running,
     Stopped,
     NotFound,
@@ -38,7 +38,7 @@ impl ThreadManager {
     {
         let thread_info = ThreadInfo {
             name: name.to_string(),
-            latest_status: status::Running,
+            latest_status: thread_status::Running,
         };
 
         // Add the thread name to the active threads list.
@@ -60,14 +60,14 @@ impl ThreadManager {
     }
 
     /// get a single threads statuss
-    pub fn get_thread_status(&self, thread_name: String) -> status {
+    pub fn get_thread_status(&self, thread_name: String) -> thread_status {
         let listan = self.get_active_threads();
         for item in listan.iter() {
             if item.name == thread_name {
                 return item.latest_status;
             }
         }
-        return status::NotFound;
+        return thread_status::NotFound;
     }
 
     // get all running threads

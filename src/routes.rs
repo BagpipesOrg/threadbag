@@ -4,11 +4,13 @@ use crate::database::decode::decompress_string;
 use crate::database::types::{
     job_start, GenericOut, GetUrlResponse, ScenarioInfo, UrlResponse, Urldata,
 };
-use crate::jobs::threads::{ThreadInfo, ThreadManager};
+use crate::jobs::threads::{ThreadInfo, ThreadManager, thread_status};
 use crate::scenarios::scenario_parse::scenario_information;
 use crate::scenarios::scenario_types::Graph;
 use actix_web::{get, post, web, HttpResponse, Result};
 use std::sync::Arc;
+
+
 
 #[get("/")]
 pub async fn info() -> HttpResponse {
@@ -148,9 +150,10 @@ pub async fn list_all_threads(data: web::Data<Arc<ThreadManager>>) -> HttpRespon
 pub async fn list_single_thread(
     postdata: web::Json<ScenarioInfo>,
     data: web::Data<Arc<ThreadManager>>,
-) -> web::Json<ThreadInfo> {
-    return web::Json(GenericOut {
-        success: false,
-        result: "not found".to_string(),
-    });
+) -> web::Json<thread_status> {
+
+    let scenario_id = postdata.into_inner().id; 
+    let thread_info = data.get_thread_status(scenario_id);
+
+    return web::Json(thread_info);
 }
