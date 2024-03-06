@@ -16,7 +16,7 @@ pub struct UrlResponse {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct job_start {
     pub scenario_id: String,
-    pub delay: f32, // 32 should be enough
+    pub delay: u64, // f32 32 should be enough
 }
 
 #[derive(Debug, Deserialize, Serialize)]
