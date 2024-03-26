@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::scenarios::scenario_types::{Graph, ScenarioSummary, TxType};
+use crate::scenarios::scenario_types::{Graph, StringOrNumber, ScenarioSummary, TxType};
 use getrandom::getrandom;
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,7 @@ pub fn scenario_information(inputen: Graph) -> Result<String, Error> {
     Ok(formatted_chain_list)
 }
 
-pub fn multi_scenario_info(scenario_data: &Graph) -> Vec<ScenarioSummary> {
+pub fn multi_scenario_info(scenario_data: Graph) -> Vec<ScenarioSummary> {
     let mut alles: Vec<ScenarioSummary> = Vec::new();
 
     for node in &scenario_data.nodes {
@@ -42,10 +42,20 @@ pub fn multi_scenario_info(scenario_data: &Graph) -> Vec<ScenarioSummary> {
                 txtype: TxType::swap,
                 tx: "not set".to_string(),
             };
-
-            tmp_scenario.txtype = action_data.actionType.clone().into();
+            println!("action data: {:?}", action_data);
+            let ss = "swap".to_string();
+            let xt = "xTransfer".to_string();
+            match &action_data.actionType {
+                ss => tmp_scenario.txtype = TxType::swap, 
+                xt => tmp_scenario.txtype = TxType::xTransfer,
+            };
+            println!("action_data.actionType: {:?}", action_data.actionType);
             tmp_scenario.amount = action_data.source.amount.clone();
-            tmp_scenario.assetid = action_data.source.assetId.clone().into();
+            match action_data.source.assetId.to_owned() {
+                Some(val) => tmp_scenario.assetid = val.into(),
+                None => tmp_scenario.assetid = "0".to_string(),
+            }
+            //tmp_scenario.assetid = tmp_assetid.clone() as String;
             tmp_scenario.source_address = action_data.source.address.clone();
             tmp_scenario.dest_address = action_data.target.address.clone().expect("no dest_addr");
             tmp_scenario.source_chain = action_data.source.chain.clone();

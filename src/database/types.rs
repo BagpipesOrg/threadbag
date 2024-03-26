@@ -1,5 +1,6 @@
 use actix_web::{web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
+use crate::scenarios::scenario_types::ScenarioSummary;
 
 #[derive(Debug, Deserialize)]
 pub struct Urldata {
@@ -26,9 +27,27 @@ pub struct GetUrlResponse {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct BroadcastInput {
+    pub chain: String,
+    pub tx: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct BroadcastStatus {
+    pub status: String,
+    pub hash: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct GenericOut {
     pub success: bool,
     pub result: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ScenarioInfoOut { 
+    pub success: bool, 
+    pub result: Option<Vec<ScenarioSummary>>
 }
 
 #[derive(Debug, Deserialize)]
