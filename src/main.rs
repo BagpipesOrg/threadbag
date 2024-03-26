@@ -3,8 +3,8 @@ use actix_rt::spawn;
 use actix_web::{get, middleware, rt::Runtime, web, App, HttpResponse, HttpServer};
 //use tokio::time::Duration;
 //use futures::channel::mpsc;
+use actix_cors::Cors;
 use tokio::sync::mpsc; // use tokio's mpsc channel
-
 //use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::time::sleep;
@@ -24,13 +24,21 @@ use jobs::threads::ThreadManager;
 use jobs::types::{Command, ThreadInfo};
 use tokio::time::Duration;
 
-
 // get the slashes
 mod routes;
 use routes::{
     broadcast_tx, dot_openchannels, get_url, info, list_single_thread, save_url, start_job,
-    xcm_asset_transfer,
+    xcm_asset_transfer, scenario_info
 };
+
+// cors settings to allow any origin
+pub fn cors_middleware() -> Cors {
+    Cors::default()
+        .allow_any_origin()
+     .allow_any_method()
+        .allow_any_header()
+    //     .supports_credentials()
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -60,10 +68,12 @@ async fn main() -> std::io::Result<()> {
             App::new()
                 //   .app_data(thread_info_clone.clone()) // Pass shared data to the app
                 .wrap(middleware::Compress::default())
+                .wrap(cors_middleware())
                 .app_data(web::Data::new(Arc::clone(&thread_manager)))
                 .app_data(web::Data::new(db_handler.clone()))
                 .service(xcm_asset_transfer)
                 .service(get_url)
+                .service(scenario_info)
                 .service(save_url) // Explicitly specify the handler for the route
                 .service(broadcast_tx)
                 .service(dot_openchannels)
@@ -78,7 +88,6 @@ async fn main() -> std::io::Result<()> {
         .await
     });
 
-    
     // old remove
     let ready = Arc::new(tokio::sync::Mutex::new(()));
     let ready_clone = ready.clone();

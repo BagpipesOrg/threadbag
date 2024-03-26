@@ -2,15 +2,13 @@
 
 use serde::{Deserialize, Serialize};
 
-
-
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Graph {
     pub nodes: Vec<ChainNode>,
     pub edges: Vec<Edge>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Edge {
     pub id: String,
     pub source: String,
@@ -24,24 +22,24 @@ pub struct Edge {
     pub focusable: Option<bool>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct EdgeStyle {
     pub stroke: String,
     pub stroke_width: Option<f64>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct MarkerEnd {
     r#type: String,
     stroke_width: f64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct LabelStyle {
-    background_color: String,
+    pub background_color: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ChainNode {
     pub id: String,
     pub r#type: String,
@@ -56,20 +54,20 @@ pub struct ChainNode {
     pub dragging: bool,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Position {
     x: f64,
     y: f64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct NodeData {
     pub label: String,
     pub image: Option<String>,
     pub name: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Data {
     pub label: String,
     pub triggerToast: Option<bool>,
@@ -77,7 +75,7 @@ pub struct Data {
     pub name: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct FormData {
     pub chain: Option<String>,
     pub asset: Option<Asset>,
@@ -96,11 +94,10 @@ pub struct ActionData {
     pub target: Target,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Source {
     pub chain: String,
-    pub assetId: StringOrNumber,
+    pub assetId: Option<StringOrNumber>,
     pub address: String,
     pub amount: String,
     pub symbol: Option<String>,
@@ -110,7 +107,7 @@ pub struct Source {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Target {
     pub chain: String,
-    pub assetid: StringOrNumber,
+    pub assetid: Option<StringOrNumber>,
     pub address: Option<String>,
     pub symbol: Option<String>,
 }
@@ -132,14 +129,14 @@ impl From<StringOrNumber> for String {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Asset {
     pub name: String,
     pub assetid: Option<u32>,
     pub symbol: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum TxType {
     xTransfer,
     swap,
@@ -170,7 +167,7 @@ pub struct scenario_summary {
     pub tx: String,             // hex tx
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScenarioSummary {
     pub source_chain: String,
     pub source_address: String,

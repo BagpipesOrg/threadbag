@@ -2,15 +2,14 @@
 use crate::database::db::DBhandler;
 use crate::database::decode::decompress_string;
 use crate::database::types::{
-    job_start, GenericOut, GetUrlResponse, ScenarioInfo, UrlResponse, Urldata,
+    job_start, BroadcastInput, BroadcastStatus, ScenarioInfoOut, GenericOut, GetUrlResponse, ScenarioInfo,
+    UrlResponse, Urldata,
 };
-use crate::jobs::threads::{ThreadManager, thread_status}; // ThreadInfo
-use crate::scenarios::scenario_parse::scenario_information;
+use crate::jobs::threads::{thread_status, ThreadManager}; // ThreadInfo
+use crate::scenarios::scenario_parse::{scenario_information, multi_scenario_info};
 use crate::scenarios::scenario_types::Graph;
 use actix_web::{get, post, web, HttpResponse, Result};
 use std::sync::Arc;
-
-
 
 #[get("/")]
 pub async fn info() -> HttpResponse {
@@ -25,8 +24,11 @@ pub async fn dot_openchannels() -> HttpResponse {
 
 // broadcast input: {chain: 'hydradx', tx: ''}
 #[post("/broadcast")]
-pub async fn broadcast_tx() -> HttpResponse {
-    HttpResponse::Ok().body("Todo!")
+pub async fn broadcast_tx(data: web::Json<BroadcastInput>) -> web::Json<BroadcastStatus> {
+    web::Json(BroadcastStatus {
+        status: "fail".to_string(),
+        hash: "not found".to_string(),
+    })
 }
 
 #[post("/saveUrl")]
@@ -92,11 +94,18 @@ pub async fn start_job(
     });
 }
 
-#[post("/scenario/info/")]
+
+
+/*
+curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http://localhost:8081/scenario/info -v
+{"success":true,"result":[{"source_chain":"polkadot","source_address":"5GdvmQtUwByTt6Vkx41vtWvg5guyaH3BL2yn6iamg1RViiKD","dest_chain":"assetHub","dest_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","assetid":"0","amount":"1","txtype":"swap","tx":"not set"},{"source_chain":"assetHub","source_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","dest_chain":"hydraDx","dest_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","assetid":"3","amount":"2","txtype":"swap","tx":"not set"},{"source_chain":"hydraDx","source_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","dest_chain":"hydraDx","dest_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","assetid":"5","amount":"2","txtype":"swap","tx":"not set"}]}
+*/
+
+#[post("/scenario/info")]
 pub async fn scenario_info(
     data: web::Json<ScenarioInfo>,
     db: web::Data<DBhandler>,
-) -> web::Json<GenericOut> {
+) -> web::Json<ScenarioInfoOut> {
     println!("scenario info got input: {:?}", data);
     let name = data.into_inner().id;
     // geturl
@@ -108,31 +117,38 @@ pub async fn scenario_info(
             let decoded = decompress_string(out)
                 .await
                 .expect("Failed to decompress string, invalid value");
-
+            println!("decoded ok");
+            println!("Decoded as: {}", decoded);
             // Decoded diagram data json
             let graph: Graph =
                 serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
 
             println!("decoded okay");
             // parse scenario
-            let output_string = scenario_information(graph).expect("could not parse scenario");
-
-            return web::Json(GenericOut {
+            println!("parsing scenario_information");
+            let output_string = scenario_information(graph.clone()).expect("could not parse scenario");
+            println!("parsing scenario_information ok");
+            println!("parsing multi_scenario_info");
+            let o2 = multi_scenario_info(graph.clone());
+            println!("parsing multi_scenario_info ok");
+            println!("parsing multi_scenario_info: {:?}", o2);
+            return web::Json(ScenarioInfoOut {
                 success: true,
-                result: output_string,
+                result: Some(o2),
             });
         }
         Err(err) => {
-            return web::Json(GenericOut {
+            return web::Json(ScenarioInfoOut {
                 success: false,
-                result: "not found".to_string(),
+                result:  None,
             })
         }
     };
 
-    return web::Json(GenericOut {
+    return web::Json(ScenarioInfoOut {
         success: false,
-        result: "not found".to_string(),
+        result: None, 
+       // result: Vec::new(),
     });
     //HttpResponse::Ok().body("wip")
 }
@@ -151,9 +167,26 @@ pub async fn list_single_thread(
     postdata: web::Json<ScenarioInfo>,
     data: web::Data<Arc<ThreadManager>>,
 ) -> web::Json<thread_status> {
-
-    let scenario_id = postdata.into_inner().id; 
+    let scenario_id = postdata.into_inner().id;
     let thread_info = data.get_thread_status(scenario_id);
 
     return web::Json(thread_info);
+}
+
+// get execution logs | get the history of the executed scenario
+#[post("/scenario/worker/logs")]
+pub async fn get_logs() -> web::Json<GenericOut> {
+    return web::Json(GenericOut {
+        success: false,
+        result: "not found".to_string(),
+    });
+}
+
+// test a http action
+#[post("/action/http/dry_run")]
+pub async fn dry_run_http() -> web::Json<GenericOut> {
+    return web::Json(GenericOut {
+        success: false,
+        result: "not found".to_string(),
+    });
 }

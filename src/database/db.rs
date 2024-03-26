@@ -33,7 +33,7 @@ impl DBhandler {
 
         let db_instance: Db = self.read_db()?;
         db_instance.insert(my_id.clone(), url_data)?;
-
+        db_instance.flush()?;
         Ok(my_id)
     }
     /// return entry in the db
