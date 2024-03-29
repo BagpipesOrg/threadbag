@@ -9,21 +9,29 @@ use crate::database::decode::decompress_string;
 use crate::scenarios::scenario_types::Graph;
 use crate::DBhandler;
 use crate::scenarios::scenario_types::ScenarioSummary;
-
+use crate::scenarios::scenario_parse::verify_scenario_id;
 
 use crate::scenarios::scenario_parse::multi_scenario_info;
 
 /// Start a job worker for scenario_id and sleep for X(delay) amount of hours
-pub async fn start_job_worker(scenario_id: String, delay: u64, ready: Arc<tokio::sync::Mutex<()>>) -> Result<(), Error> {
+pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Error> {
   
+
+    /// sanitize input | todo better verify function 
+    match verify_scenario_id(scenario_id.clone()) {
+        true => {  }, // if its true do nothing and assume its a correct string0
+        _ => { return Err(Error::ScenarioIdNotFound)}
+    };
+
+
     println!("Starting job worker");
     let db_fluff = DBhandler::new();
     println!("Decoding data");
-    let graph: Graph = db_fluff.get_decoded_entry(scenario_id).await?;
+    let graph: Graph = db_fluff.get_decoded_entry(scenario_id).await.expect(return Err(Error::ScenarioIdNotFound));
       
     // parse the scenario to scenario summary list then 
      let o2: Vec<ScenarioSummary> = multi_scenario_info(graph.clone());
-    println!("scenario posted ");
+    println!("scenario data extracted ");
     loop {
 
         sleep(Duration::from_secs(60 * 60 * delay)).await; // change me in the future, to work better with hours

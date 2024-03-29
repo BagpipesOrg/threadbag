@@ -93,16 +93,17 @@ async fn main() -> std::io::Result<()> {
     // old remove
     let ready = Arc::new(tokio::sync::Mutex::new(()));
     let ready_clone = ready.clone();
-    tokio::spawn(async move {
+    actix_rt::spawn(async move {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Introduce a delay
         tx.send(Command::Start {
-            job: "sending from second handle".to_string(),
+            scenario_id: "sending from second handle".to_string(),
+            delay: 100u64,
         })
         .await;
         let _ = ready.lock().await; // Notify task_manager that it is ready
     });
     //spanning thread
-    let dummy_thread_handle = tokio::spawn(async move {
+    let dummy_thread_handle = actix_rt::spawn(async move {
         dummy_thread(tx3, ready_clone).await;
     });
 
@@ -111,15 +112,20 @@ async fn main() -> std::io::Result<()> {
             use Command::*;
 
             match cmd {
-                Status { job } => {
+                Status { scenario_id } => {
                     println!("Got the status of the job");
                 }
-                Stop { job } => {
+                Stop { scenario_id } => {
                     println!("Received job stop signal");
                 }
                 Start { scenario_id, delay } => {
                     let outme = format!("Starting job: {:?}", scenario_id);
+             
                     // start_job_worker start_job_worker
+                    let worker_thread = actix_rt::spawn(async move {
+                        start_job_worker(scenario_id, delay).await; 
+                    });
+                    println!("worker thread");
                     println!("output: {}", outme);
                 }
             }
