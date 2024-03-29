@@ -3,6 +3,8 @@ use crate::database::decode::decompress_string;
 use crate::database::types::Urldata;
 use crate::error::Error as CrateError;
 use crate::scenarios::scenario_parse::generate_random_id;
+use crate::scenarios::scenario_types::Graph;
+
 use anyhow::Error;
 use sled;
 use sled::{Db, IVec}; //IVec Tree
@@ -47,4 +49,43 @@ impl DBhandler {
             _ => return Err(CrateError::NoEntryInDb),
         }
     }
+    /// println! db stats
+    pub fn display_stats(&self) -> Result<(), CrateError> {
+        let db = self.read_db()?;
+        let amount_of_entries = count_entries(&db);
+        let size = db.size_on_disk()?;
+        println!("[Database Checker] - Metadata stats:");
+        println!(
+            "[Database Checker] - Amount of entries in the database: {:?}",
+            amount_of_entries
+        );
+        println!("[Database Checker] - Size on disk: {:?}", size);
+
+        Ok(())
+    }
+    /// query for an item and decode it to a Graph
+    pub async fn get_decoded_entry(&self, key: String) -> Result<Graph, CrateError> {
+        let out = self.get_entry(key)?;
+        let decoded = decompress_string(out)
+            .await
+            .expect("Failed to decompress string, invalid value");
+
+        let graph: Graph = serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
+        return Ok(graph);
+    }
+
+    pub fn new() -> DBhandler {
+        return DBhandler {};
+    }
+}
+
+fn count_entries(db: &Db) -> usize {
+    let mut total_entries = 0;
+
+    // Iterate over all entries and count them
+    for _ in db.iter() {
+        total_entries += 1;
+    }
+
+    total_entries
 }

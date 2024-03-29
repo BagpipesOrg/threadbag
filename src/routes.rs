@@ -2,12 +2,13 @@
 use crate::database::db::DBhandler;
 use crate::database::decode::decompress_string;
 use crate::database::types::{
-    job_start, BroadcastInput, BroadcastStatus, ScenarioInfoOut, GenericOut, GetUrlResponse, ScenarioInfo,
-    UrlResponse, Urldata,
+    job_start, BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, ScenarioInfo,
+    ScenarioInfoOut, UrlResponse, Urldata,
 };
 use crate::jobs::threads::{thread_status, ThreadManager}; // ThreadInfo
-use crate::scenarios::scenario_parse::{scenario_information, multi_scenario_info};
-use crate::scenarios::scenario_types::Graph;
+use crate::scenarios::scenario_parse::{multi_scenario_info, scenario_information};
+use crate::scenarios::scenario_types::{Graph, ScenarioSummary};
+use crate::Command;
 use actix_web::{get, post, web, HttpResponse, Result};
 use std::sync::Arc;
 
@@ -84,17 +85,26 @@ pub async fn xcm_asset_transfer() -> HttpResponse {
 #[post("/job/start")]
 pub async fn start_job(
     data: web::Json<job_start>,
+    tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
     db: web::Data<DBhandler>,
 ) -> web::Json<GenericOut> {
     let my_data: job_start = data.into_inner();
+   
+   // validate input
 
+   // send job start command
+   
+    tx.send(Command::Start {
+        //job: "sending from second handle".to_string(),
+        scenario_id: "sending from second handle".to_string(),
+        delay: 200u64, 
+    })
+    .await;
     return web::Json(GenericOut {
         success: true,
         result: "Job started".to_string(),
     });
 }
-
-
 
 /*
 curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http://localhost:8081/scenario/info -v
@@ -126,10 +136,11 @@ pub async fn scenario_info(
             println!("decoded okay");
             // parse scenario
             println!("parsing scenario_information");
-            let output_string = scenario_information(graph.clone()).expect("could not parse scenario");
+            let output_string =
+                scenario_information(graph.clone()).expect("could not parse scenario");
             println!("parsing scenario_information ok");
             println!("parsing multi_scenario_info");
-            let o2 = multi_scenario_info(graph.clone());
+            let o2: Vec<ScenarioSummary> = multi_scenario_info(graph.clone());
             println!("parsing multi_scenario_info ok");
             println!("parsing multi_scenario_info: {:?}", o2);
             return web::Json(ScenarioInfoOut {
@@ -140,15 +151,15 @@ pub async fn scenario_info(
         Err(err) => {
             return web::Json(ScenarioInfoOut {
                 success: false,
-                result:  None,
+                result: None,
             })
         }
     };
 
     return web::Json(ScenarioInfoOut {
         success: false,
-        result: None, 
-       // result: Vec::new(),
+        result: None,
+        // result: Vec::new(),
     });
     //HttpResponse::Ok().body("wip")
 }

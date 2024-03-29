@@ -5,7 +5,7 @@ use actix_web::{get, middleware, rt::Runtime, web, App, HttpResponse, HttpServer
 //use futures::channel::mpsc;
 use actix_cors::Cors;
 use tokio::sync::mpsc; // use tokio's mpsc channel
-//use std::collections::HashMap;
+                       //use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::time::sleep;
 
@@ -27,15 +27,15 @@ use tokio::time::Duration;
 // get the slashes
 mod routes;
 use routes::{
-    broadcast_tx, dot_openchannels, get_url, info, list_single_thread, save_url, start_job,
-    xcm_asset_transfer, scenario_info
+    broadcast_tx, dot_openchannels, get_url, info, list_single_thread, save_url, scenario_info,
+    start_job, xcm_asset_transfer,
 };
 
 // cors settings to allow any origin
 pub fn cors_middleware() -> Cors {
     Cors::default()
         .allow_any_origin()
-     .allow_any_method()
+        .allow_any_method()
         .allow_any_header()
     //     .supports_credentials()
 }
@@ -61,6 +61,7 @@ async fn main() -> std::io::Result<()> {
 
     //  let tx2 = tx.clone();
     let tx3 = tx.clone();
+    let tx3_clone = tx3.clone(); // Clone tx3 before moving it into the closure
 
     let http_handle = actix_rt::spawn(async move {
         println!("Running web service on port 8081");
@@ -69,6 +70,7 @@ async fn main() -> std::io::Result<()> {
                 //   .app_data(thread_info_clone.clone()) // Pass shared data to the app
                 .wrap(middleware::Compress::default())
                 .wrap(cors_middleware())
+               .app_data(tx3_clone.clone())
                 .app_data(web::Data::new(Arc::clone(&thread_manager)))
                 .app_data(web::Data::new(db_handler.clone()))
                 .service(xcm_asset_transfer)
@@ -115,10 +117,10 @@ async fn main() -> std::io::Result<()> {
                 Stop { job } => {
                     println!("Received job stop signal");
                 }
-                Start { job } => {
-                    let outme = format!("Starting job: {:?}", job);
-                    // start_job_worker
-                    println!("{}", outme);
+                Start { scenario_id, delay } => {
+                    let outme = format!("Starting job: {:?}", scenario_id);
+                    // start_job_worker start_job_worker
+                    println!("output: {}", outme);
                 }
             }
         }

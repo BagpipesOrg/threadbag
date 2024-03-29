@@ -4,9 +4,12 @@ pub struct ThreadInfo {
     // Add more information about the thread if needed
 }
 
+
+
+
 #[derive(Debug)]
 pub enum Command {
-    Status { job: String },
-    Start { job: String },
-    Stop { job: String },
+    Status { scenario_id: String },
+    Start { scenario_id: String, delay: u64 },
+    Stop { scenario_id: String },
 }

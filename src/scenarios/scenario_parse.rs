@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::scenarios::scenario_types::{Graph, StringOrNumber, ScenarioSummary, TxType};
+use crate::scenarios::scenario_types::{Graph, ScenarioSummary, StringOrNumber, TxType};
 use getrandom::getrandom;
 use serde::{Deserialize, Serialize};
 
@@ -46,7 +46,7 @@ pub fn multi_scenario_info(scenario_data: Graph) -> Vec<ScenarioSummary> {
             let ss = "swap".to_string();
             let xt = "xTransfer".to_string();
             match &action_data.actionType {
-                ss => tmp_scenario.txtype = TxType::swap, 
+                ss => tmp_scenario.txtype = TxType::swap,
                 xt => tmp_scenario.txtype = TxType::xTransfer,
             };
             println!("action_data.actionType: {:?}", action_data.actionType);
