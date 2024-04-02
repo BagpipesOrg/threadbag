@@ -1,7 +1,10 @@
 use crate::error::Error;
-use crate::scenarios::scenario_types::{Graph, StringOrNumber, ScenarioSummary, TxType};
+use crate::scenarios::scenario_types::{Graph, ScenarioSummary, StringOrNumber, TxType};
 use getrandom::getrandom;
 use serde::{Deserialize, Serialize};
+
+const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$*+_"; // supported charset
+const ID_LENGTH: usize = 9; // size / length
 
 // scenario_info
 pub fn scenario_information(inputen: Graph) -> Result<String, Error> {
@@ -46,7 +49,7 @@ pub fn multi_scenario_info(scenario_data: Graph) -> Vec<ScenarioSummary> {
             let ss = "swap".to_string();
             let xt = "xTransfer".to_string();
             match &action_data.actionType {
-                ss => tmp_scenario.txtype = TxType::swap, 
+                ss => tmp_scenario.txtype = TxType::swap,
                 xt => tmp_scenario.txtype = TxType::xTransfer,
             };
             println!("action_data.actionType: {:?}", action_data.actionType);
@@ -69,8 +72,6 @@ pub fn multi_scenario_info(scenario_data: Graph) -> Vec<ScenarioSummary> {
 }
 
 pub fn generate_random_id() -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$*+_"; // supported charset
-    const ID_LENGTH: usize = 9; // size / length
     let mut random_bytes = vec![0; ID_LENGTH];
     getrandom(&mut random_bytes).expect("Failed to generate random bytes");
 
@@ -161,4 +162,10 @@ fn validate_diagram_data(
 
     // Return Ok with the original diagramData if no issues found
     Ok(diagram_data)
+}
+
+/// verify that the user has provided a valid scenario_id, input sanitation
+pub fn verify_scenario_id(scenario_id: String) -> bool {
+    let input = scenario_id.as_str();
+    input.len() == ID_LENGTH && input.chars().all(|c| CHARSET.contains(&(c as u8)))
 }
