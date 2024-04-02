@@ -2,7 +2,7 @@
 use crate::database::db::DBhandler;
 use crate::database::decode::decompress_string;
 use crate::database::types::{
-    job_start, BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, ScenarioInfo,
+    job_start, BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, LogsOut, ScenarioInfo,
     ScenarioInfoOut, UrlResponse, Urldata,
 };
 use crate::jobs::threads::{thread_status, ThreadManager}; // ThreadInfo
@@ -193,17 +193,25 @@ pub async fn list_single_thread(
     return web::Json(thread_info);
 }
 
-// get execution logs | get the history of the executed scenario
+/// get execution logs | get the history of the executed scenario
+/// Returns a list of logs for the entry in a Vec<String>
 #[post("/scenario/worker/logs")]
 pub async fn get_logs(
     postdata: web::Json<ScenarioInfo>,
     db: web::Data<DBhandler>,
-) -> web::Json<GenericOut> {
+) -> web::Json<LogsOut> {
     println!("displaying logs");
+    let listan: Vec<String> = Vec::new();
+    // todo validate scenario id
+    let scenario_id = postdata.into_inner().id;
+    let output: Vec<String> = match db.query_logs(scenario_id) {
+        Ok(value) => value,
+        Err(_) => listan,
+    };
 
-    return web::Json(GenericOut {
-        success: false,
-        result: "not found".to_string(),
+    return web::Json(LogsOut {
+        success: true,
+        result: output,
     });
 }
 
