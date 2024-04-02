@@ -45,6 +45,12 @@ pub struct GenericOut {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct LogsOut {
+    pub success: bool,
+    pub result: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScenarioInfoOut {
     pub success: bool,
     pub result: Option<Vec<ScenarioSummary>>,
