@@ -5,7 +5,7 @@ use actix_web::{get, middleware, rt::Runtime, web, App, HttpResponse, HttpServer
 //use futures::channel::mpsc;
 use actix_cors::Cors;
 use tokio::sync::mpsc; // use tokio's mpsc channel
-//use std::collections::HashMap;
+                       //use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::time::sleep;
 
@@ -27,21 +27,25 @@ use tokio::time::Duration;
 // get the slashes
 mod routes;
 use routes::{
-    broadcast_tx, dot_openchannels, get_url, info, list_single_thread, save_url, start_job,
-    xcm_asset_transfer, scenario_info
+    broadcast_tx, dot_openchannels, get_url, info, list_single_thread, save_url, scenario_info,
+    start_job, xcm_asset_transfer,
 };
 
 // cors settings to allow any origin
 pub fn cors_middleware() -> Cors {
     Cors::default()
         .allow_any_origin()
-     .allow_any_method()
+        .allow_any_method()
         .allow_any_header()
     //     .supports_credentials()
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // logger
+    std::env::set_var("RUST_LOG", "debug");
+    env_logger::init();
+
     //  print_banner();
     // Explicitly specify the type for the channel
     // let (_panic_sender, mut _panic_receiver): (mpsc::Sender<&str>, mpsc::Receiver<&str>) = mpsc::channel(1);
@@ -61,6 +65,7 @@ async fn main() -> std::io::Result<()> {
 
     //  let tx2 = tx.clone();
     let tx3 = tx.clone();
+    let tx3_clone = tx3.clone(); // Clone tx3 before moving it into the closure
 
     let http_handle = actix_rt::spawn(async move {
         println!("Running web service on port 8081");
@@ -69,12 +74,13 @@ async fn main() -> std::io::Result<()> {
                 //   .app_data(thread_info_clone.clone()) // Pass shared data to the app
                 .wrap(middleware::Compress::default())
                 .wrap(cors_middleware())
+                .app_data(web::Data::new(tx3_clone.clone()))
                 .app_data(web::Data::new(Arc::clone(&thread_manager)))
                 .app_data(web::Data::new(db_handler.clone()))
                 .service(xcm_asset_transfer)
                 .service(get_url)
                 .service(scenario_info)
-                .service(save_url) // Explicitly specify the handler for the route
+                .service(save_url)
                 .service(broadcast_tx)
                 .service(dot_openchannels)
                 .service(start_job)
@@ -91,16 +97,17 @@ async fn main() -> std::io::Result<()> {
     // old remove
     let ready = Arc::new(tokio::sync::Mutex::new(()));
     let ready_clone = ready.clone();
-    tokio::spawn(async move {
+    actix_rt::spawn(async move {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Introduce a delay
         tx.send(Command::Start {
-            job: "sending from second handle".to_string(),
+            scenario_id: "sending from second handle".to_string(),
+            delay: 100u64,
         })
         .await;
         let _ = ready.lock().await; // Notify task_manager that it is ready
     });
     //spanning thread
-    let dummy_thread_handle = tokio::spawn(async move {
+    let dummy_thread_handle = actix_rt::spawn(async move {
         dummy_thread(tx3, ready_clone).await;
     });
 
@@ -109,16 +116,21 @@ async fn main() -> std::io::Result<()> {
             use Command::*;
 
             match cmd {
-                Status { job } => {
+                Status { scenario_id } => {
                     println!("Got the status of the job");
                 }
-                Stop { job } => {
+                Stop { scenario_id } => {
                     println!("Received job stop signal");
                 }
-                Start { job } => {
-                    let outme = format!("Starting job: {:?}", job);
-                    // start_job_worker
-                    println!("{}", outme);
+                Start { scenario_id, delay } => {
+                    let outme = format!("Starting job: {:?}", scenario_id);
+
+                    // start_job_worker start_job_worker
+                    let worker_thread = actix_rt::spawn(async move {
+                        start_job_worker(scenario_id, delay).await;
+                    });
+                    println!("worker thread");
+                    println!("output: {}", outme);
                 }
             }
         }

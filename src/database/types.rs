@@ -1,6 +1,6 @@
+use crate::scenarios::scenario_types::ScenarioSummary;
 use actix_web::{web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
-use crate::scenarios::scenario_types::ScenarioSummary;
 
 #[derive(Debug, Deserialize)]
 pub struct Urldata {
@@ -45,9 +45,9 @@ pub struct GenericOut {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ScenarioInfoOut { 
-    pub success: bool, 
-    pub result: Option<Vec<ScenarioSummary>>
+pub struct ScenarioInfoOut {
+    pub success: bool,
+    pub result: Option<Vec<ScenarioSummary>>,
 }
 
 #[derive(Debug, Deserialize)]
