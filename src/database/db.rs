@@ -10,6 +10,8 @@ use chrono::Utc;
 use sled;
 use sled::{Db, IVec}; //IVec Tree
 use std::str;
+use regex::Regex;
+
 
 #[derive(Debug, Clone)]
 pub struct DBhandler {}
@@ -89,9 +91,9 @@ impl DBhandler {
         let utc_time = Utc::now().to_string(); // Convert UTC time to string
         let formated_date = &utc_time[..19]; // Slice the first 19 characters
         let date_n_log = format!("{} {}", formated_date, log_entry);
-
+        let log_name_entry = format!("{}_logs", thread_name);
         let op_bytes = serialize(&date_n_log).unwrap();
-        db.merge(thread_name.as_bytes(), op_bytes).unwrap();
+        db.merge(log_name_entry.as_bytes(), op_bytes).unwrap();
         // Serialize the values and insert them into the database
 
         /*
@@ -106,17 +108,30 @@ impl DBhandler {
         Ok(true) // save log to
     }
 
-    /// query the logs of a scenario worker
+    /// query the logs of a scenario worker 
     pub fn query_logs(&self, thread_name: String) -> Result<Vec<String>, CrateError> {
+        println!("query logs called");
         let db = self.read_db()?;
-        let key_bytes = thread_name.as_bytes();
+        let log_name_entry = format!("{}_logs", thread_name); // either we get a new db for the logs or just add a prefix
+        let outme = String::from_utf8(db.get(log_name_entry)?.expect("Could not get logs").to_vec())?;
+        println!("Raw logs: {:?}", outme);
+        /*
+        // new line is: %\0\0\0\0\0\0\0 and )\0\0\0\0\0\0\0"
+        let logs: Vec<String> = outme
+            .split_terminator("%\0\0\0\0\0\0\0")
+            .flat_map(|s| s.split_terminator(")\0\0\0\0\0\0\0"))
+            .map(|s| s.to_string())
+            .collect();
+*/
+let logs: Vec<String> = outme
+.split_terminator("#\0\0\0\0\0\0\0")
+.flat_map(|s| s.split_terminator("&\0\0\0\0\0\0\0"))
+.map(|s| s.to_string())
+.collect();
 
-        let out: Vec<String> = match db.get(key_bytes).unwrap() {
-            Some(value) => deserialize(&value).unwrap(),
-            _ => Vec::<String>::new(),
-        };
-
-        return Ok(out);
+        //   println!("Got logs: {:?}", logs);
+       println!("filtered list: {:?}", logs);
+        return Ok(logs);
     }
 
     pub fn new() -> DBhandler {

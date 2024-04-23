@@ -5,6 +5,9 @@ use subxt::{
     OnlineClient, SubstrateConfig,
 };
 
+
+/*
+
 /// Polkadot's runtime types
 #[subxt::subxt(
     runtime_metadata_insecure_url = "wss://polkadot-rpc.dwellir.com:443",
@@ -46,3 +49,6 @@ async fn testtx() {
 }
 
 //pub fn tx_to_hex()
+
+
+*/

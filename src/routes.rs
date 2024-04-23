@@ -32,6 +32,8 @@ pub async fn broadcast_tx(data: web::Json<BroadcastInput>) -> web::Json<Broadcas
     })
 }
 
+
+
 #[post("/saveUrl")]
 pub async fn save_url(
     data: web::Json<Urldata>,
@@ -82,7 +84,8 @@ pub async fn xcm_asset_transfer() -> HttpResponse {
     HttpResponse::Ok().body("Todo!")
 }
 
-/// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWg"}' http://localhost:8081/job/start -v/// wanted input:  {         
+/// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWg"}' http://localhost:8081/job/start -v
+/// wanted input:  {         
 ///    pub scenario_id: String,        
 ///    pub delay: u64,        
 ///}        
@@ -181,6 +184,7 @@ pub async fn list_all_threads(data: web::Data<Arc<ThreadManager>>) -> HttpRespon
     HttpResponse::Ok().json(active_threads)
 }
 
+// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http://localhost:8081/scenario/info -v
 /// query single scenario worker
 #[post("/scenario/worker/")]
 pub async fn list_single_thread(
@@ -193,6 +197,7 @@ pub async fn list_single_thread(
     return web::Json(thread_info);
 }
 
+// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http://localhost:8081/scenario/worker/logs -v
 /// get execution logs | get the history of the executed scenario
 /// Returns a list of logs for the entry in a Vec<String>
 #[post("/scenario/worker/logs")]
@@ -201,14 +206,16 @@ pub async fn get_logs(
     db: web::Data<DBhandler>,
 ) -> web::Json<LogsOut> {
     println!("displaying logs");
+    println!("quering logs");
     let listan: Vec<String> = Vec::new();
     // todo validate scenario id
     let scenario_id = postdata.into_inner().id;
-    let output: Vec<String> = match db.query_logs(scenario_id) {
-        Ok(value) => value,
-        Err(_) => listan,
-    };
 
+    let output: Vec<String> = match db.into_inner().query_logs(scenario_id){
+            Ok(value) => value,
+            _ => Vec::new(),
+    };
+  println!("returning query logs");
     return web::Json(LogsOut {
         success: true,
         result: output,

@@ -25,7 +25,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
     let db_fluff = DBhandler::new();
     println!("Decoding data");
     db_fluff.save_log(scenario_id.clone(), "Starting worker".to_string())?;
-
+    db_fluff.save_log(scenario_id.clone(), "Decoding payload..".to_string())?;
     let graph: Graph = db_fluff
         .get_decoded_entry(scenario_id)
         .await
@@ -34,6 +34,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
     // parse the scenario to scenario summary list then
     let o2: Vec<ScenarioSummary> = multi_scenario_info(graph.clone());
     db_fluff.save_log(scenario_id.clone(), "Parsed scenario data".to_string())?;
+    db_fluff.save_log(scenario_id.clone(), "Delaying..".to_string())?;
 
     println!("scenario data extracted ");
     loop {
