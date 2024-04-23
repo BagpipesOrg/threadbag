@@ -88,7 +88,7 @@ impl DBhandler {
         let db = self.read_db()?;
         let utc_time = Utc::now().to_string(); // Convert UTC time to string
         let formated_date = &utc_time[..19]; // Slice the first 19 characters
-        let date_n_log = format!("{} {}", formated_date, log_entry);
+        let date_n_log = format!("{} {}NEXTENTRY222", formated_date, log_entry);
         let log_name_entry = format!("{}_logs", thread_name);
         let op_bytes = serialize(&date_n_log).unwrap();
         db.merge(log_name_entry.as_bytes(), op_bytes).unwrap();
@@ -110,13 +110,32 @@ impl DBhandler {
     pub fn query_logs(&self, thread_name: String) -> Result<Vec<String>, CrateError> {
         println!("query logs called");
         let db = self.read_db()?;
+
         let log_name_entry = format!("{}_logs", thread_name); // either we get a new db for the logs or just add a prefix
-        let outme = String::from_utf8(
-            db.get(log_name_entry)?
+        println!("log name: {:?}", log_name_entry);
+   
+   /*     let outme = String::from_utf8(
+            db.get(log_name_entry.clone())?
                 .expect("Could not get logs")
                 .to_vec(),
         )?;
-        //      println!("Raw logs: {:?}", outme);
+*/
+        let outme = match db.get(log_name_entry.as_bytes()) {
+            Ok(Some(value)) => {
+                let outputen: String = String::from_utf8(value.to_vec()).expect("Invalid UTF-8");
+                outputen
+            }
+            _ => "not found".to_string(), //return Err(CrateError::NoEntryInDb)
+        };
+        // remove null \0 chars in string
+
+        let fmt_me = format!("{}", outme); 
+        let cleaned_str: String = fmt_me.chars().filter(|&c| c != '\0').collect();
+
+            println!("Raw logs: {:?}", outme);
+            println!("Raw logs 2: {}", fmt_me);
+            println!("Cleaned string: {}", cleaned_str);
+            println!("------------------------eol------------------------");
         /*
                 // new line is: %\0\0\0\0\0\0\0 and )\0\0\0\0\0\0\0"
                 let logs: Vec<String> = outme
@@ -124,16 +143,20 @@ impl DBhandler {
                     .flat_map(|s| s.split_terminator(")\0\0\0\0\0\0\0"))
                     .map(|s| s.to_string())
                     .collect();
+           let logs: Vec<String> = fmt_me
+        .split_terminator(r"NEXTENTRY2222")
+        .flat_map(|s| s.split_terminator(r"NEXTENTRY2222"))
+        .map(|s| s.to_string())
+        .collect();
         */
-        let logs: Vec<String> = outme
-            .split_terminator("#\0\0\0\0\0\0\0")
-            .flat_map(|s| s.split_terminator("&\0\0\0\0\0\0\0"))
-            .map(|s| s.to_string())
-            .collect();
-
-        //   println!("Got logs: {:?}", logs);
+  
+  
+     let entries_test: Vec<String> = cleaned_str.split("NEXTENTRY222").map(|s| s.to_string()).collect();
+        println!("entries test is: {:?}", entries_test);
+    //      println!("Got logs: {:?}", logs);
         //      println!("filtered list: {:?}", logs);
-        return Ok(logs);
+        println!("query logs eol");
+        return Ok(entries_test);
     }
 
     pub fn new() -> DBhandler {
