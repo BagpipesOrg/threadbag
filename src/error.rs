@@ -26,7 +26,7 @@ pub enum Error {
     /// Sled database error
     Sled(sled::Error),
     /// Error converting string to u8
-    Utf8StringError(std::string::FromUtf8Error)
+    Utf8StringError(std::string::FromUtf8Error),
 }
 
 impl From<anyhow::Error> for Error {

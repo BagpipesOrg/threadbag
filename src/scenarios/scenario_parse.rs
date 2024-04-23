@@ -42,17 +42,21 @@ pub fn multi_scenario_info(scenario_data: Graph) -> Vec<ScenarioSummary> {
                 dest_address: "not set".to_string(),
                 assetid: "0".to_string(), // assuming assetId is a number
                 amount: "0".to_string(),
-                txtype: TxType::swap,
+                txtype: TxType::unknown,
                 tx: "not set".to_string(),
             };
-            println!("action data: {:?}", action_data);
+            //     println!("action data: {:?}", action_data);
             let ss = "swap".to_string();
             let xt = "xTransfer".to_string();
-            match &action_data.actionType {
-                ss => tmp_scenario.txtype = TxType::swap,
-                xt => tmp_scenario.txtype = TxType::xTransfer,
+            let right_one = match &action_data.actionType {
+                xt => TxType::xTransfer,
+                ss => TxType::swap,
+                _ => TxType::unknown,
             };
-            println!("action_data.actionType: {:?}", action_data.actionType);
+            tmp_scenario.txtype = right_one;
+            //      println!("action_data.actionType: {:?}", action_data.actionType);
+            //      println!(" tmp_scenario.txtype: {:?}",  tmp_scenario.txtype);
+            //      println!(" right_one: {:?}",  right_one);
             tmp_scenario.amount = action_data.source.amount.clone();
             match action_data.source.assetId.to_owned() {
                 Some(val) => tmp_scenario.assetid = val.into(),
@@ -63,7 +67,7 @@ pub fn multi_scenario_info(scenario_data: Graph) -> Vec<ScenarioSummary> {
             tmp_scenario.dest_address = action_data.target.address.clone().expect("no dest_addr");
             tmp_scenario.source_chain = action_data.source.chain.clone();
             tmp_scenario.dest_chain = action_data.target.chain.clone();
-
+            //  println!("tmp_scenario final: {:?}", tmp_scenario);
             alles.push(tmp_scenario);
         }
     }

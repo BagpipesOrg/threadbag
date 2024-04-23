@@ -5,7 +5,6 @@ use subxt::{
     OnlineClient, SubstrateConfig,
 };
 
-
 /*
 
 /// Polkadot's runtime types

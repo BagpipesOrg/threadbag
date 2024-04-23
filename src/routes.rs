@@ -32,8 +32,6 @@ pub async fn broadcast_tx(data: web::Json<BroadcastInput>) -> web::Json<Broadcas
     })
 }
 
-
-
 #[post("/saveUrl")]
 pub async fn save_url(
     data: web::Json<Urldata>,
@@ -105,7 +103,7 @@ pub async fn start_job(
     // validate input
 
     // send job start command
-
+    println!("route job sending start command");
     tx.send(Command::Start {
         //job: "sending from second handle".to_string(),
         scenario_id: scenario_id,
@@ -211,11 +209,11 @@ pub async fn get_logs(
     // todo validate scenario id
     let scenario_id = postdata.into_inner().id;
 
-    let output: Vec<String> = match db.into_inner().query_logs(scenario_id){
-            Ok(value) => value,
-            _ => Vec::new(),
+    let output: Vec<String> = match db.into_inner().query_logs(scenario_id) {
+        Ok(value) => value,
+        _ => Vec::new(),
     };
-  println!("returning query logs");
+    println!("returning query logs");
     return web::Json(LogsOut {
         success: true,
         result: output,

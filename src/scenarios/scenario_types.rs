@@ -136,7 +136,7 @@ pub struct Asset {
     pub symbol: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum TxType {
     xTransfer,
     swap,
@@ -147,6 +147,7 @@ impl From<String> for TxType {
     fn from(value: String) -> TxType {
         let swap: String = "swap".to_string();
         let xtransfer: String = "xTransfer".to_string();
+
         match value {
             xtransfer => TxType::xTransfer,
             swap => TxType::swap,
@@ -167,7 +168,7 @@ pub struct scenario_summary {
     pub tx: String,             // hex tx
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ScenarioSummary {
     pub source_chain: String,
     pub source_address: String,
