@@ -27,8 +27,8 @@ use tokio::time::Duration;
 // get the slashes
 mod routes;
 use routes::{
-    broadcast_tx, dot_openchannels, get_url, info, list_single_thread, save_url, scenario_info,
-    start_job, xcm_asset_transfer,
+    broadcast_tx, dot_openchannels, get_logs, get_url, info, list_single_thread, save_url,
+    scenario_info, start_job, xcm_asset_transfer,
 };
 
 // cors settings to allow any origin
@@ -81,6 +81,7 @@ async fn main() -> std::io::Result<()> {
                 .service(get_url)
                 .service(scenario_info)
                 .service(save_url)
+                .service(get_logs)
                 .service(broadcast_tx)
                 .service(dot_openchannels)
                 .service(start_job)

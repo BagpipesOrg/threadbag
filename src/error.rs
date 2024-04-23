@@ -25,6 +25,8 @@ pub enum Error {
 
     /// Sled database error
     Sled(sled::Error),
+    /// Error converting string to u8
+    Utf8StringError(std::string::FromUtf8Error)
 }
 
 impl From<anyhow::Error> for Error {
@@ -36,6 +38,12 @@ impl From<anyhow::Error> for Error {
 impl From<sled::Error> for Error {
     fn from(src: sled::Error) -> Error {
         Error::Sled(src)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for Error {
+    fn from(src: std::string::FromUtf8Error) -> Error {
+        Error::Utf8StringError(src)
     }
 }
 
