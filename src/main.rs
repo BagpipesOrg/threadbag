@@ -7,7 +7,7 @@ use actix_cors::Cors;
 use tokio::sync::mpsc; // use tokio's mpsc channel
                        //use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tokio::time::sleep;
+use tokio::time::{sleep, Duration};
 
 //mod cli;
 //use cli::print_banner;
@@ -22,7 +22,6 @@ mod tx_format;
 use jobs::jobs::{dummy_thread, start_job_worker};
 use jobs::threads::ThreadManager;
 use jobs::types::{Command, ThreadInfo};
-use tokio::time::Duration;
 
 // get the slashes
 mod routes;
@@ -125,8 +124,9 @@ async fn main() -> std::io::Result<()> {
                 }
                 Start { scenario_id, delay } => {
                     let outme = format!("Starting job: {:?}", scenario_id);
-
+                    println!("Start job called");
                     // start_job_worker start_job_worker
+                    println!("Starting worker thread");
                     let worker_thread = actix_rt::spawn(async move {
                         start_job_worker(scenario_id, delay).await;
                     });
@@ -134,6 +134,8 @@ async fn main() -> std::io::Result<()> {
                     println!("output: {}", outme);
                 }
             }
+
+            //    sleep(Duration::from_secs(60 * 60 * 10)).await;
         }
     });
 

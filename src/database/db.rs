@@ -10,8 +10,6 @@ use chrono::Utc;
 use sled;
 use sled::{Db, IVec}; //IVec Tree
 use std::str;
-use regex::Regex;
-
 
 #[derive(Debug, Clone)]
 pub struct DBhandler {}
@@ -108,29 +106,33 @@ impl DBhandler {
         Ok(true) // save log to
     }
 
-    /// query the logs of a scenario worker 
+    /// query the logs of a scenario worker
     pub fn query_logs(&self, thread_name: String) -> Result<Vec<String>, CrateError> {
         println!("query logs called");
         let db = self.read_db()?;
         let log_name_entry = format!("{}_logs", thread_name); // either we get a new db for the logs or just add a prefix
-        let outme = String::from_utf8(db.get(log_name_entry)?.expect("Could not get logs").to_vec())?;
-        println!("Raw logs: {:?}", outme);
+        let outme = String::from_utf8(
+            db.get(log_name_entry)?
+                .expect("Could not get logs")
+                .to_vec(),
+        )?;
+        //      println!("Raw logs: {:?}", outme);
         /*
-        // new line is: %\0\0\0\0\0\0\0 and )\0\0\0\0\0\0\0"
+                // new line is: %\0\0\0\0\0\0\0 and )\0\0\0\0\0\0\0"
+                let logs: Vec<String> = outme
+                    .split_terminator("%\0\0\0\0\0\0\0")
+                    .flat_map(|s| s.split_terminator(")\0\0\0\0\0\0\0"))
+                    .map(|s| s.to_string())
+                    .collect();
+        */
         let logs: Vec<String> = outme
-            .split_terminator("%\0\0\0\0\0\0\0")
-            .flat_map(|s| s.split_terminator(")\0\0\0\0\0\0\0"))
+            .split_terminator("#\0\0\0\0\0\0\0")
+            .flat_map(|s| s.split_terminator("&\0\0\0\0\0\0\0"))
             .map(|s| s.to_string())
             .collect();
-*/
-let logs: Vec<String> = outme
-.split_terminator("#\0\0\0\0\0\0\0")
-.flat_map(|s| s.split_terminator("&\0\0\0\0\0\0\0"))
-.map(|s| s.to_string())
-.collect();
 
         //   println!("Got logs: {:?}", logs);
-       println!("filtered list: {:?}", logs);
+        //      println!("filtered list: {:?}", logs);
         return Ok(logs);
     }
 
