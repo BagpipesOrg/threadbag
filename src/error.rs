@@ -23,6 +23,9 @@ pub enum Error {
     /// Invalid destination chain
     InvalidDestinationChain,
 
+    /// problems making a http request
+    HTTPRequestProblem(reqwest::Error),
+
     /// Sled database error
     Sled(sled::Error),
     /// Error converting string to u8
@@ -32,6 +35,12 @@ pub enum Error {
 impl From<anyhow::Error> for Error {
     fn from(src: anyhow::Error) -> Error {
         Error::Anyhow(src)
+    }
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(src: reqwest::Error) -> Error {
+        Error::HTTPRequestProblem(src)
     }
 }
 

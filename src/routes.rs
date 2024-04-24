@@ -1,5 +1,5 @@
 // HTTP Endpoint routes
-use crate::database::db::DBhandler;
+use crate::database::db::{DBhandler, Loghandler};
 use crate::database::decode::decompress_string;
 use crate::database::types::{
     job_start, BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, LogsOut, ScenarioInfo,
@@ -201,22 +201,21 @@ pub async fn list_single_thread(
 #[post("/scenario/worker/logs")]
 pub async fn get_logs(
     postdata: web::Json<ScenarioInfo>,
-    db: web::Data<DBhandler>,
+    l_db: web::Data<Loghandler>,
 ) -> web::Json<LogsOut> {
     println!("displaying logs");
     println!("quering logs");
-    let listan: Vec<String> = Vec::new();
     // todo validate scenario id
     let scenario_id = postdata.into_inner().id;
 
-    let output: Vec<String> = match db.into_inner().query_logs(scenario_id) {
-        Ok(value) => value,
+    let output: Vec<String> = match l_db.into_inner().get_entry(scenario_id) {
+        Ok(value) => value.into_iter().map(|entry| entry.msg).collect(),
         _ => Vec::new(),
     };
     println!("returning query logs");
     return web::Json(LogsOut {
         success: true,
-        result: output,
+        result: output, // can get the dates as well if want to
     });
 }
 
