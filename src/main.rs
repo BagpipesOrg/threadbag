@@ -1,4 +1,4 @@
-use crate::database::db::DBhandler;
+use crate::database::db::{DBhandler, Loghandler};
 use actix_rt::spawn;
 use actix_web::{get, middleware, rt::Runtime, web, App, HttpResponse, HttpServer};
 //use tokio::time::Duration;
@@ -65,7 +65,7 @@ async fn main() -> std::io::Result<()> {
     //  let tx2 = tx.clone();
     let tx3 = tx.clone();
     let tx3_clone = tx3.clone(); // Clone tx3 before moving it into the closure
-
+    let l_db: Loghandler = Loghandler::new();
     let http_handle = actix_rt::spawn(async move {
         println!("Running web service on port 8081");
         HttpServer::new(move || {
@@ -76,6 +76,7 @@ async fn main() -> std::io::Result<()> {
                 .app_data(web::Data::new(tx3_clone.clone()))
                 .app_data(web::Data::new(Arc::clone(&thread_manager)))
                 .app_data(web::Data::new(db_handler.clone()))
+                .app_data(web::Data::new(l_db.clone()))
                 .service(xcm_asset_transfer)
                 .service(get_url)
                 .service(scenario_info)

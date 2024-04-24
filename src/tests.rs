@@ -1,21 +1,39 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::chains::chains::{chains, get_rpc_endpoint};
-    use crate::database::db::DBhandler;
-    use crate::database::decode::decompress_string;
-    use crate::scenarios::scenario_types::Graph;
+    use crate::tx_format::lazy_gen::generate_tx;
+    //use crate::chains::chains::{chains, get_rpc_endpoint};
+    //use crate::database::db::DBhandler;
+    //use crate::database::decode::decompress_string;
+    //  use crate::scenarios::scenario_types::Graph;
     //    use crate::tx_format::generic::{
     //        assethubpolkadotconf, hydradxconf, interlayconf, polkadotconf,
     //   };
-    use subxt::{OnlineClient, PolkadotConfig};
-    use subxt_signer::sr25519::dev;
+    //    use subxt::{OnlineClient, PolkadotConfig};
+    //   use subxt_signer::sr25519::dev;
 
     #[test]
     fn it_works() {
         println!("running");
         let result = 2 + 2;
         assert_eq!(result, 4);
+    }
+
+    #[actix_rt::test]
+    async fn make_api_request() -> Result<(), anyhow::Error> {
+        println!("make_api_request start");
+        let sourcechain = "polkadot".to_string();
+        let destchain = "assetHub".to_string();
+        let assetid = "0".to_string();
+        let amount = "100000000".to_string();
+        let destinationaddress = "5GYdCV9F3gg9gnmWU8nrt8tXCxMXDbcGpsdX1gJStCx9yZKK".to_string();
+        //  dest_chain: String, amount: String, assetid: String, dest_account: String)
+        let tx_response = generate_tx(sourcechain, destchain, amount, assetid, destinationaddress)
+            .await
+            .unwrap(); // yolo
+        println!("Got tx back: {:?}", tx_response.txdata);
+        println!("make_api_request finished");
+        Ok(())
     }
 
     /*
@@ -70,7 +88,7 @@ mod tests {
 
             println!("test done, string decompressed ok");
         }
-    */
+
 
     #[actix_rt::test]
     async fn polkadot_2_assethub_tx() -> Result<(), Box<dyn std::error::Error>> {
@@ -95,4 +113,5 @@ mod tests {
         println!("tx is: {:?}", hex_tx);
         Ok(())
     }
+      */
 }
