@@ -1,11 +1,28 @@
 #![allow(non_snake_case)]
 
+use std::option;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Graph {
-    pub nodes: Vec<ChainNode>,
+    pub nodes: Vec<ChainNode>, //Vec<ChainNode>,
     pub edges: Vec<Edge>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct FutureGraph {
+    pub nodes: Vec<MaNodes>, //Vec<ChainNode>,
+    pub edges: Vec<Edge>,
+}
+
+/// Support Chain, HTTP and webhook node
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(tag = "type")]
+pub enum MaNodes {
+    chain(ChainNode),
+    http(HTTPNode),
+    action(ChainNode),
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -42,7 +59,8 @@ pub struct LabelStyle {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ChainNode {
     pub id: String,
-    pub r#type: String,
+    #[serde(rename = "type")]
+    pub node_type: String,
     pub position: Position,
     pub data: NodeData,
     pub style: serde_json::Value, // Adjust the type as needed
@@ -52,6 +70,42 @@ pub struct ChainNode {
     pub selected: bool,
     pub position_absolute: Option<Position>,
     pub dragging: bool,
+}
+
+/// for parsing http nodes
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct HTTPNode {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub node_type: String,
+    pub position: Position,
+    pub data: NodeData,
+    pub style: serde_json::Value, // Adjust the type as needed
+    pub formData: Option<HTTP_NODE_FORMDATA>,
+    pub width: f64,
+    pub height: f64,
+    pub selected: bool,
+    pub position_absolute: Option<Position>,
+    pub dragging: bool,
+}
+
+/// for parsing webhooks
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct WebhookNode {
+    pub id: String,
+    pub r#type: String,
+    pub position: Position,
+    pub data: NodeData,
+    pub style: serde_json::Value, // Adjust the type as needed
+    pub formData: Option<WebhookFormData>,
+    pub width: f64,
+    pub height: f64,
+    pub selected: bool,
+    pub position_absolute: Option<Position>,
+    pub dragging: bool,
+    pub selectedWebhook: String,
+    pub uuid: String,
+    pub eventData: Option<WebhookEventData>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -76,6 +130,57 @@ pub struct Data {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct HTTP_NODE_FORMDATA {
+    pub serializeUrl: String,
+    pub parseResponse: String,
+    pub shareCookies: String,
+    pub rejectUnverifiedCertificates: String,
+    pub followRedirects: String,
+    pub followAllRedirects: String,
+    pub requestCompressedContent: String,
+    pub useMutualTLS: String,
+    pub evaluateErrors: String,
+    pub url: String,
+    pub method: String,
+    pub connectionType: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct WebhookFormData {
+    pub uuid: String,
+    pub webhookName: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct WebhookEventData {
+    pub query: Option<String>,
+    pub createdAt: String,
+    pub method: String,
+    // add more after needs
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Graph2 {
+    pub nodes: Vec<MultiNodes>,
+    pub edges: Vec<Edge>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(tag = "type")]
+pub enum MultiNodes {
+    #[serde(rename = "http")]
+    Http(HTTPNode),
+    #[serde(rename = "chain")]
+    Chain(ChainNode),
+    #[serde(rename = "action")]
+    Action(ChainNode),
+    #[serde(rename = "webhook")]
+    Webhook(ChainNode),
+    #[serde(other)]
+    Unknown,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct FormData {
     pub chain: Option<String>,
     pub asset: Option<Asset>,
@@ -85,6 +190,18 @@ pub struct FormData {
     pub contact: Option<String>, // Adjust the type as needed
     pub action: Option<String>,
     pub actionData: Option<ActionData>,
+    pub serializeUrl: Option<String>,
+    pub parseResponse: Option<String>,
+    pub shareCookies: Option<String>,
+    pub rejectUnverifiedCertificates: Option<String>,
+    pub followRedirects: Option<String>,
+    pub followAllRedirects: Option<String>,
+    pub requestCompressedContent: Option<String>,
+    pub useMutualTLS: Option<String>,
+    pub evaluateErrors: Option<String>,
+    pub url: Option<String>,
+    pub method: Option<String>,
+    pub connectionType: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -117,6 +234,15 @@ pub struct Target {
 pub enum StringOrNumber {
     String(String),
     Number(f64),
+}
+
+impl StringOrNumber {
+    pub fn to_string(&self) -> String {
+        match self {
+            StringOrNumber::String(s) => s.clone(), // Extract and return the inner String
+            StringOrNumber::Number(n) => n.to_string(), // Convert f64 to String
+        }
+    }
 }
 
 // impl into()

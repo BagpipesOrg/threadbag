@@ -1,7 +1,19 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tx_format::lazy_gen::generate_tx;
+    use crate::database::decode::decompress_string;
+    use crate::scenarios::scenario_parse::{convert_to_multinode, scenario_information};
+    use crate::scenarios::scenario_types::ScenarioSummary;
+    use crate::scenarios::scenario_types::TxType;
+    use crate::scenarios::scenario_types::{
+        ChainNode, Edge, Graph, HTTPNode, MaNodes, HTTP_NODE_FORMDATA,
+    };
+    use crate::scenarios::scenario_types::{Graph2, MultiNodes};
+    use crate::{database::db::DBhandler, tx_format::lazy_gen::generate_tx};
+    use serde::{Deserialize, Serialize};
+    use serde_json::{Result as SerdeResult, Value};
+    use std::fmt::format;
+
     //use crate::chains::chains::{chains, get_rpc_endpoint};
     //use crate::database::db::DBhandler;
     //use crate::database::decode::decompress_string;
@@ -17,6 +29,59 @@ mod tests {
         println!("running");
         let result = 2 + 2;
         assert_eq!(result, 4);
+    }
+
+    #[actix_rt::test]
+    async fn test_mulit_type_node() -> Result<(), anyhow::Error> {
+        println!("Starting test_mulit_type_node");
+        let db_h = DBhandler::new();
+        //   let db = db_h.read_db()?;
+
+        let multi_scenario_id: String = "coO3s7GiT".to_string();
+
+        let out = db_h.get_entry(multi_scenario_id).unwrap();
+        let decoded = decompress_string(out)
+            .await
+            .expect("Failed to decompress string, invalid value");
+        println!("decoded ok");
+        println!("Decoded as: {}", decoded);
+        // Decoded diagram data json
+        let graph_result: SerdeResult<Graph> = serde_json::from_str(decoded.as_str());
+
+        let g2: Graph2 = convert_to_multinode(graph_result.expect("could not parse graph"));
+        let ulti_list = g2.nodes;
+
+        println!("Amount in loot: {}", ulti_list.len());
+        let http_node_count = ulti_list
+            .iter()
+            .filter(|node| matches!(node, MultiNodes::Http(_)))
+            .count();
+        let chain_node_count = ulti_list
+            .iter()
+            .filter(|node| matches!(node, MultiNodes::Chain(_)))
+            .count();
+        let action_node_count = ulti_list
+            .iter()
+            .filter(|node| matches!(node, MultiNodes::Action(_)))
+            .count();
+        let webhook_node_count = ulti_list
+            .iter()
+            .filter(|node| matches!(node, MultiNodes::Webhook(_)))
+            .count();
+
+        println!("http_node_count: {}", http_node_count);
+        println!("chain_node_count: {}", chain_node_count);
+        println!("action_node_count: {}", action_node_count);
+        println!("webhook_node_count: {}", webhook_node_count);
+
+        println!("decoded okay");
+        // parse scenario
+        println!("parsing scenario_information");
+
+        //   let output_string =
+        //     scenario_information(graph.clone()).expect("could not parse scenario");
+
+        return Ok(());
     }
 
     #[actix_rt::test]
