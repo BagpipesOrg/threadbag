@@ -1,5 +1,8 @@
 use crate::error::Error;
-use crate::scenarios::scenario_types::{Graph, ScenarioSummary, StringOrNumber, TxType};
+use crate::scenarios::scenario_types::{
+    Graph, Graph2, MultiNodes, ScenarioSummary, StringOrNumber, TxType,
+};
+use crate::scenarios::scenario_types::{HTTPNode, HTTP_NODE_FORMDATA};
 use getrandom::getrandom;
 use serde::{Deserialize, Serialize};
 
@@ -11,11 +14,11 @@ pub fn scenario_information(inputen: Graph) -> Result<String, Error> {
     let mut chain_list: Vec<String> = Vec::new();
 
     for node in inputen.nodes {
-        if node.r#type == "chain" {
+        if node.node_type == "chain" {
             if let Some(formData) = node.formData {
                 chain_list.push(formData.chain.unwrap());
             }
-        } else if node.r#type == "action" && node.formData.is_some() {
+        } else if node.node_type == "action" && node.formData.is_some() {
             if let Some(action) = node.formData.unwrap().action {
                 chain_list.push(action);
             }
@@ -25,11 +28,74 @@ pub fn scenario_information(inputen: Graph) -> Result<String, Error> {
     Ok(formatted_chain_list)
 }
 
+// Return a parsed list of different types of nodes
+pub fn convert_to_multinode(scenario_data: Graph) -> Graph2 {
+    let mut ulti_list: Vec<MultiNodes> = Vec::new();
+
+    // println!("got graph back");
+
+    for node in scenario_data.nodes {
+        //          println!("Node is {:?}", node.node_type);
+        match node.node_type.as_str() {
+            "chain" => {
+                ulti_list.push(MultiNodes::Chain(node));
+            }
+            "action" => {
+                ulti_list.push(MultiNodes::Action(node));
+            }
+            "webhook" => {
+                ulti_list.push(MultiNodes::Webhook(node));
+            }
+            "http" => {
+                let formdata = node.formData.expect("could not find formdata");
+                //            println!("Formdata: {:?}", formdata);
+                let http_node: HTTPNode = HTTPNode {
+                    id: node.id,
+                    node_type: "http".to_string(),
+                    position: node.position,
+                    data: node.data,
+                    style: node.style,
+                    formData: Some(HTTP_NODE_FORMDATA {
+                        serializeUrl: formdata.serializeUrl.expect("could not get formdata"),
+                        parseResponse: formdata.parseResponse.expect(""),
+                        shareCookies: formdata.shareCookies.expect(""),
+                        rejectUnverifiedCertificates: formdata
+                            .rejectUnverifiedCertificates
+                            .expect(""),
+                        followAllRedirects: formdata.followAllRedirects.expect(""),
+                        followRedirects: formdata.followRedirects.expect(""),
+                        requestCompressedContent: formdata.requestCompressedContent.expect(""),
+                        useMutualTLS: formdata.useMutualTLS.expect(""),
+                        evaluateErrors: formdata.evaluateErrors.expect(""),
+                        url: formdata.url.expect(""),
+                        method: formdata.method.expect(""),
+                        connectionType: formdata.connectionType.expect(""),
+                    }),
+                    width: node.width,
+                    height: node.height,
+                    selected: node.selected,
+                    position_absolute: node.position_absolute,
+                    dragging: node.dragging,
+                };
+                ulti_list.push(MultiNodes::Http(http_node));
+            }
+
+            _ => {}
+        }
+    }
+
+    println!("Amount in loot: {}", ulti_list.len());
+    Graph2 {
+        nodes: ulti_list,
+        edges: scenario_data.edges,
+    }
+}
+
 pub fn multi_scenario_info(scenario_data: Graph) -> Vec<ScenarioSummary> {
     let mut alles: Vec<ScenarioSummary> = Vec::new();
 
     for node in &scenario_data.nodes {
-        if node.r#type == "action"
+        if node.node_type == "action"
             && node.formData.is_some()
             && node.formData.as_ref().unwrap().actionData.is_some()
         {

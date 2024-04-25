@@ -35,13 +35,13 @@ pub async fn compress_string(input: &str) -> Result<String, Box<dyn Error>> {
 
 pub async fn decompress_string(compressed_input: String) -> Result<String, String> {
     // Uncomment the following line if you want to print debugging information
-    println!("Decompressing string\nGot input: {}", compressed_input);
-    println!("f1");
+    // println!("Decompressing string\nGot input: {}", compressed_input);
+    // println!("f1");
 
-    println!("decoding bytes");
+    //println!("decoding bytes");
     // Decode base64 and create a Vec<u8>
     let decoded_bytes = BASE64_STANDARD.decode(compressed_input.as_bytes()).unwrap();
-    println!("bytes decoded");
+    //   println!("bytes decoded");
 
     // Decompress using zlib
     let mut decompressed = Vec::new();
@@ -50,7 +50,7 @@ pub async fn decompress_string(compressed_input: String) -> Result<String, Strin
         Ok(_) => {
             let decompressed_str =
                 String::from_utf8(decompressed).map_err(|_| "Error converting to UTF-8")?;
-            println!("Decompressed Result: {}", decompressed_str);
+            //       println!("Decompressed Result: {}", decompressed_str);
             Ok(decompressed_str)
         }
         Err(_) => Err("Error decompressing string".to_string()),
