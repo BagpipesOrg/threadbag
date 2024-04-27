@@ -60,19 +60,50 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                 MultiNodes::Action(chain_node) => {
                     let form_me = chain_node.clone().formData.expect("");
                     let txtype = form_me.action.expect("could not get tx type");
-                    let s_chain = form_me.actionData.clone().expect("could not get source.chain").source.chain;
-                    let d_chain = form_me.actionData.clone().expect("could not get target.chain").target.chain;
-                    let s_address = form_me.actionData.clone().expect("could not get source.address").source.address;
-                    let d_address = form_me.actionData.clone().expect("could not get target address").target.address.expect("target address problem");
+                    let s_chain = form_me
+                        .actionData
+                        .clone()
+                        .expect("could not get source.chain")
+                        .source
+                        .chain;
+                    let d_chain = form_me
+                        .actionData
+                        .clone()
+                        .expect("could not get target.chain")
+                        .target
+                        .chain;
+                    let s_address = form_me
+                        .actionData
+                        .clone()
+                        .expect("could not get source.address")
+                        .source
+                        .address;
+                    let d_address = form_me
+                        .actionData
+                        .clone()
+                        .expect("could not get target address")
+                        .target
+                        .address
+                        .expect("target address problem");
 
-                    let d_amount = form_me.actionData.clone().expect("could not get source.amount").source.amount; 
-                    let s_assetid = form_me.actionData.clone().expect("could not get assetid").source.assetId.expect("no assetid").to_string();
-                              let log_entry_go = format!(
-                                    "Drafting {} tx from {} to {}",
-                                    txtype, s_chain, d_chain
-                                );
-                                println!("Log entry go: {:?}", log_entry_go);
-                                log_db.insert_logs(scenario_id.clone(), log_entry_go.clone())?;
+                    let d_amount = form_me
+                        .actionData
+                        .clone()
+                        .expect("could not get source.amount")
+                        .source
+                        .amount;
+                    let s_assetid = form_me
+                        .actionData
+                        .clone()
+                        .expect("could not get assetid")
+                        .source
+                        .assetId
+                        .expect("no assetid")
+                        .to_string();
+                    let log_entry_go =
+                        format!("Drafting {} tx from {} to {}", txtype, s_chain, d_chain);
+                    println!("Log entry go: {:?}", log_entry_go);
+                    log_db.insert_logs(scenario_id.clone(), log_entry_go.clone())?;
 
                     //             let s_chain = chain_node.source_chain.clone();
                     //            let d_chain = chain_node.dest_chain.clone();
@@ -80,11 +111,12 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                     //            let s_assetid = chain_node.assetid.clone();
                     //           let d_address = chain_node.dest_address.clone();
                     //           let tx_response: String =
-                                let tx_response =   match generate_tx(s_chain, d_chain, d_amount, s_assetid, d_address).await {
-                                      Ok(value) => value.txdata, // if all good return the txdata
-                                     _ => "Could not generate transaction".to_string(),
-                                };
-                           log_db.insert_logs(scenario_id.clone(), tx_response.clone())?;
+                    let tx_response =
+                        match generate_tx(s_chain, d_chain, d_amount, s_assetid, d_address).await {
+                            Ok(value) => value.txdata, // if all good return the txdata
+                            _ => "Could not generate transaction".to_string(),
+                        };
+                    log_db.insert_logs(scenario_id.clone(), tx_response.clone())?;
 
                     println!("Action node: {:?}", chain_node);
                     log_db

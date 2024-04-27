@@ -1,6 +1,6 @@
 // sled db to store and fetch scenarios
 use crate::database::decode::decompress_string;
-use crate::database::types::Urldata;
+use crate::database::types::{TxInfo, Urldata};
 use crate::error::Error as CrateError;
 use crate::scenarios::scenario_parse::generate_random_id;
 use crate::scenarios::scenario_types::Graph;
@@ -36,9 +36,40 @@ pub struct Loghandler {}
 
 /// Polodb
 impl Loghandler {
+    /// read the logs.db
     pub fn read_db(&self) -> Result<PoloDB, Error> {
         let open: PoloDB = PoloDB::open_file("logs.db")?;
         return Ok(open);
+    }
+    /// insert transaction to the Mempool
+    pub fn insert_tx(
+        &self,
+        scenario_id: String,
+        amount: String,
+        chain: String,
+        txType: String,
+    ) -> Result<(), Error> {
+        let db = self.read_db()?;
+        let tx_pool = format!("{}_txpool", scenario_id);
+        let collection = db.collection::<TxInfo>(tx_pool.as_str());
+        collection.insert_one(TxInfo {
+            amount: amount,
+            chain: chain,
+            txType: txType,
+            Date: "".to_string(),
+        })?;
+        Ok(())
+    }
+
+    /// get mempool for scenarioid
+    pub fn get_transactions(&self, scenario_id: String) -> Result<Vec<TxInfo>, Error> {
+        let db = self.read_db()?;
+        let tx_pool = format!("{}_txpool", scenario_id);
+
+        let collection = db.collection::<TxInfo>(tx_pool.as_str());
+        let entries = collection.find(None)?; // return all entries under parent key
+        let listan: Vec<TxInfo> = entries.into_iter().map(|entry| entry.unwrap()).collect();
+        Ok(listan)
     }
 
     /// insert a log into the log files
