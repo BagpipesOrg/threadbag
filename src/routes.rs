@@ -3,7 +3,7 @@ use crate::database::db::{DBhandler, Loghandler};
 use crate::database::decode::decompress_string;
 use crate::database::types::{
     job_start, BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, LogsOut, ScenarioInfo,
-    ScenarioInfoOut, UrlResponse, Urldata,
+    ScenarioInfoOut, TxInfo, TxQueue, UrlResponse, Urldata,
 };
 use crate::jobs::threads::{thread_status, ThreadManager}; // ThreadInfo
 use crate::scenarios::scenario_parse::{multi_scenario_info, scenario_information};
@@ -114,6 +114,22 @@ pub async fn start_job(
         success: true,
         result: "Job started".to_string(),
     });
+}
+
+/// Threadbags mempool
+#[post("/scenario/tx")]
+pub async fn scenario_transactions(
+    data: web::Json<ScenarioInfo>,
+    db: web::Data<Loghandler>,
+) -> web::Json<TxQueue> {
+    let scenario_id = data.into_inner().id;
+
+    let output: Vec<TxInfo> = match db.into_inner().get_transactions(scenario_id) {
+        Ok(value) => value.into_iter().map(|entry| entry).collect(),
+        _ => Vec::new(),
+    };
+
+    return web::Json(TxQueue { mempool: output });
 }
 
 /*
