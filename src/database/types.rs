@@ -14,6 +14,20 @@ pub struct UrlResponse {
     pub shortUrl: String,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct TxQueue {
+    pub mempool: Vec<TxInfo>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct TxInfo {
+    pub chain: String,
+    pub amount: String,
+    pub txType: String,
+    pub Date: String,
+    pub tx: String,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct job_start {
     pub scenario_id: String,

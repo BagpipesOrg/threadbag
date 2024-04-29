@@ -58,36 +58,143 @@ MMMMMMMMMMMMMOckWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 ```
 
 
-Multithreaded work server for Bagpipes. 
+Multi-threaded Persistence work server for Bagpipes. 
 
-Made with: Tokio, Polodb + Sled, Subxt and actix-web  
 
-*use the make file*   
+Made with: A Tokio runtime, Polodb + Sled, Subxt and actix-web. 
+
+
+Backwards compatible with Bagpipes API   
+
 
 ## Run tests:
 ```shell
-$ make test 
-```
-## Run checks: 
-```shell
-$ make check 
+$ cargo test -- --nocapture
 ```
 
 
-## Format code:
-```shell
-$ make fmt 
+
+### Test with python scripts:  
+```shell  
+root@computer /tmp/threadbag # python3.7 test_req.py 
+Creating scenario..
+Response: 
+{"success":true,"shortUrl":"zvZLEgRyk"}
+Scenario id saved as: zvZLEgRyk
+Starting job: 
+start job response: {'success': True, 'result': 'Job started'}
+sleeping for 10 seconds.. 
+Quering logs for:  zvZLEgRyk
+Logs returned:  {"success":true,"result":["Starting worker","Decoding payload..","Parsed scenario data","Making http request: Url: https://example.com Method: post","Building http request","Building ChainNode request","Drafting xTransfer tx from polkadot to assetHub","0xe804630903000100a10f0300010100c63c1fb2c2d4a97b9aa07b951159b273e0d6a740914f71c074a93499d10e3e450304000000000c0000000000","Building Action request","Building ChainNode request","Building ChainNode request","Drafting xTransfer tx from assetHub to polkadot","0xdc041f090301000300010100c63c1fb2c2d4a97b9aa07b951159b273e0d6a740914f71c074a93499d10e3e45030400010000080000000000","Building Action request","workload executed","Sleeping"]}
+Getting transaction queue:  {"mempool":[{"chain":"polkadot","amount":"3","txType":"xTransfer","Date":"2024-04-29T16:28:26.808100957Z","tx":"0xe804630903000100a10f0300010100c63c1fb2c2d4a97b9aa07b951159b273e0d6a740914f71c074a93499d10e3e450304000000000c0000000000"},{"chain":"assetHub","amount":"2","txType":"xTransfer","Date":"2024-04-29T16:28:27.536623019Z","tx":"0xdc041f090301000300010100c63c1fb2c2d4a97b9aa07b951159b273e0d6a740914f71c074a93499d10e3e45030400010000080000000000"}]}
+
 ```
 
 
-## Build repo:
-```shell
-$ make build 
+### Uri's:   
+
+##### xcm_asset_transfer     
+###### Path: ``    
+
+###### Code example:  
+
+###### Response:   
+
+
+
+##### get_url   
+###### Path: ``    
+
+###### Code example:  
+
+###### Response:   
+
+
+
+
+##### scenario_info     
+###### Path: ``    
+
+###### Code example:  
+
+###### Response:   
+
+
+
+##### save_url     
+This is the same function as [Bagpipes api](https://github.com/XcmSend/api) has.   
+###### Path: ``    
+
+###### Code example:  
+
+###### Response:   
+
+
+
+
+##### get_logs    
+###### Path: ``     
+
+###### Code example:  
+
+###### Response:   
+
+
+
+##### broadcast_tx     
+TODO  
+
+
+
+
+
+##### dot_openchannels    
+TODO  
+
+
+
+
+##### scenario_transactions  // mempool      
+All transactions a scenario generates is avaliable in this transaction queue.   
+
+###### Path: `/scenario/tx`    
+
+###### Code example:  
+```python  
+## Query for the transaction que 
+txmempool = requests.post(base+"/scenario/tx", json={"id": scenario_id})
+
+print("Getting transaction queue: ", txmempool.text)
+```
+
+###### Response:   
+```json
+{"mempool":[{"chain":"polkadot","amount":"3","txType":"xTransfer","Date":"2024-04-29T16:28:26.808100957Z","tx":"0xe804630903000100a10f0300010100c63c1fb2c2d4a97b9aa07b951159b273e0d6a740914f71c074a93499d10e3e450304000000000c0000000000"},{"chain":"assetHub","amount":"2","txType":"xTransfer","Date":"2024-04-29T16:28:27.536623019Z","tx":"0xdc041f090301000300010100c63c1fb2c2d4a97b9aa07b951159b273e0d6a740914f71c074a93499d10e3e45030400010000080000000000"}]}
 ```
 
 
-## Check dependencies:  
-```shell
-$ make checkdep 
-```
+
+
+##### start_job     
+###### Path: ``    
+
+###### Code example:  
+
+###### Response:   
+
+
+##### info     
+###### Path: ``    
+
+###### Code example:  
+
+###### Response:   
+
+
+##### list_single_thread     
+###### Path: ``    
+
+###### Code example:  
+
+###### Response:   
 
