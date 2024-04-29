@@ -99,30 +99,44 @@ Getting transaction queue:  {"mempool":[{"chain":"polkadot","amount":"3","txType
 
 ## Uri's:   
 
-#### xcm_asset_transfer     
-TODO 
-
-
 
 #### get_url   
 This is the same function as [Bagpipes api](https://github.com/XcmSend/api) has.   
 
-###### Path: ``    
+###### Path: `/getUrl/scenarioid`
+Replace scenarioid, with the real scenario id. For example: /getUrl/MYSCENARIO_ID    
+
 
 ###### Code example:  
+`curl -v localhost:8080/getUrl/scenario666` 
 
 ###### Response:   
+```json
+{
+    success: bolean,
+    longUrl: "encoded scenario"
+}
+```
 
 
 
 
 #### scenario_info     
-###### Path: ``    
+Displays high level information about the scenario.  
+
+
+###### Path: `/scenario/info`    
 
 ###### Code example:  
+```shell
+curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http://localhost:8081/scenario/info -v
+```
 
 ###### Response:   
 
+```json
+{"success":true,"result":[{"source_chain":"polkadot","source_address":"5GdvmQtUwByTt6Vkx41vtWvg5guyaH3BL2yn6iamg1RViiKD","dest_chain":"assetHub","dest_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","assetid":"0","amount":"1","txtype":"swap","tx":"not set"},{"source_chain":"assetHub","source_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","dest_chain":"hydraDx","dest_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","assetid":"3","amount":"2","txtype":"swap","tx":"not set"},{"source_chain":"hydraDx","source_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","dest_chain":"hydraDx","dest_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","assetid":"5","amount":"2","txtype":"swap","tx":"not set"}]}
+```
 
 
 #### save_url     
@@ -173,15 +187,7 @@ curl:
 ```
 
 
-#### broadcast_tx     
-TODO  
 
-
-
-
-
-#### dot_openchannels    
-TODO  
 
 
 
@@ -219,20 +225,27 @@ print("start job response:", js.json())
 ```
 
 ###### Response:   
+`{'success': True, 'result': 'Job started'}`
 
 
-#### info     
-###### Path: ``    
-
-###### Code example:  
-
-###### Response:   
 
 
-#### list_single_thread     
-###### Path: ``    
+#### list_single_thread      
+Check if a scenario worker is running.  
+###### Path: `/scenario/worker/`     
 
 ###### Code example:  
 
 ###### Response:   
 
+
+#### xcm_asset_transfer     
+TODO 
+
+
+#### broadcast_tx     
+TODO  
+
+
+#### dot_openchannels    
+TODO  
