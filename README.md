@@ -67,6 +67,10 @@ Made with: A Tokio runtime, Polodb + Sled, Subxt and actix-web.
 
 Backwards compatible with Bagpipes API   
 
+## Install
+- Make sure you have rust installed: https://www.rust-lang.org/tools/install
+- updated rust(`rustup update`)
+- run: `make build`
 
 ## Run tests:
 ```shell
