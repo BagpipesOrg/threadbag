@@ -70,6 +70,7 @@ Backwards compatible with Bagpipes API
 ## Install
 - Make sure you have rust installed: https://www.rust-lang.org/tools/install
 - updated rust(`rustup update`)
+- Git clone: `git clone https://github.com/XcmSend/threadbag && cd threadbag/`
 - run: `make build`
 
 ## Run tests:
