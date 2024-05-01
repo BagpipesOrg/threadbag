@@ -116,6 +116,8 @@ pub async fn start_job(
     });
 }
 
+
+/// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWg"}' http://localhost:8081/job/start -v
 /// Threadbags mempool
 #[post("/scenario/tx")]
 pub async fn scenario_transactions(

@@ -1,4 +1,4 @@
-use crate::chains::chains::chain_info;
+use crate::chains::chains::{chain_info, get_token_decimals_by_chain_name};
 use crate::database::db::{DBhandler, Loghandler};
 use crate::database::decode::decompress_string;
 use crate::error::Error;
@@ -102,19 +102,25 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         .to_string();
                     let log_entry_go =
                         format!("Drafting {} tx from {} to {}", txtype, s_chain, d_chain);
+              
                     println!("Log entry go: {:?}", log_entry_go);
                     log_db.insert_logs(scenario_id.clone(), log_entry_go.clone())?;
 
+                    // need to convert it to the raw balance using the asset decimals
+                    let original_amount = d_amount.parse::<u64>().expect("could not convert amount to u64");
+                    let token_decimals = get_token_decimals_by_chain_name(&s_chain); // == one dot
+                    let converted_amount = original_amount * 10u64.pow(token_decimals as u32);
                     //             let s_chain = chain_node.source_chain.clone();
                     //            let d_chain = chain_node.dest_chain.clone();
                     //             let d_amount = chain_node.amount.clone();
                     //            let s_assetid = chain_node.assetid.clone();
                     //           let d_address = chain_node.dest_address.clone();
                     //           let tx_response: String =
+                    println!("Converted amount: {:?}", converted_amount);
                     let tx_response = match generate_tx(
                         s_chain.clone(),
                         d_chain,
-                        d_amount.clone(),
+                        converted_amount.to_string(), // this should be 
                         s_assetid,
                         d_address,
                     )
@@ -126,7 +132,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                     log_db.insert_logs(scenario_id.clone(), tx_response.clone())?;
                     log_db.insert_tx(
                         scenario_id.clone(),
-                        d_amount,
+                        converted_amount.to_string(),
                         s_chain,
                         "xTransfer".to_string(),
                         tx_response,
