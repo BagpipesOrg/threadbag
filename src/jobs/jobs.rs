@@ -8,7 +8,7 @@ use crate::scenarios::scenario_parse::multi_scenario_info;
 use crate::scenarios::scenario_parse::verify_scenario_id;
 use crate::scenarios::scenario_types::ScenarioSummary;
 use crate::scenarios::scenario_types::{Graph, Graph2, MultiNodes};
-use crate::tx_format::lazy_gen::generate_tx;
+use crate::tx_format::lazy_gen::{generate_tx, hydra_swaps, system_remark};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc; // use tokio's mpsc channel
@@ -17,10 +17,10 @@ use tokio::time::Duration;
 
 /// Start a job worker for scenario_id and sleep for X(delay) amount of hours
 pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Error> {
-    /// sanitize input | todo better verify function
+    // sanitize input | todo better verify function
     match verify_scenario_id(scenario_id.clone()) {
         true => {
-            println!("valida scenario id");
+            println!("valid scenario id");
         } // if its true do nothing and assume its a correct string0
         _ => {
             println!("invalid scenario id: {:?}", scenario_id);
@@ -37,8 +37,13 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
     println!("decoding graph...");
     let graph: Graph = match db_fluff.get_decoded_entry(scenario_id.clone()).await {
         Ok(value) => value,
+        Err(error) => {
+            println!("Error error: {:?}", error);
+            return Err(Error::ScenarioIdNotFound);
+        }
+
         _ => {
-            println!("Error error");
+            println!("got some type of error in the graph");
             return Err(Error::ScenarioIdNotFound);
         }
     };
@@ -58,6 +63,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
         for action_node in o3.nodes {
             match action_node {
                 MultiNodes::Action(chain_node) => {
+                    println!("action node detected");
                     let form_me = chain_node.clone().formData.expect("");
                     let txtype = form_me.action.expect("could not get tx type");
                     let s_chain = form_me
@@ -100,43 +106,154 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         .assetId
                         .expect("no assetid")
                         .to_string();
+
+                    println!("Formdata: {:?}", form_me.actionData);
                     let log_entry_go =
                         format!("Drafting {} tx from {} to {}", txtype, s_chain, d_chain);
-              
+                    println!("matching tx type: {:?}", txtype.clone());
+                    match txtype.as_ref() {
+                        "Remark" => {
+                            println!("remark tx type detected");
+                            let remarkme = match form_me
+                                .actionData
+                                .clone()
+                                .expect("no source")
+                                .source
+                                .target
+                            {
+                                Some(value) => value,
+                                _ => {
+                                    println!("Could not find source target value, error");
+                                    return Err(Error::ScenarioParseError);
+                                }
+                            };
+                            println!("remark msg get: {:?}", remarkme);
+                            // system_remark
+
+                            println!("generating tx");
+                            let remark_tx = match system_remark(s_chain.clone(), remarkme).await {
+                                Ok(value) => value,
+                                Err(error) => {
+                                    println!("Error doing the system remark: {:?}", error);
+                                    return Err(Error::ScenarioParseError);
+                                }
+                            }
+                            .result;
+                            log_db.insert_tx(
+                                scenario_id.clone(),
+                                0.to_string(),
+                                s_chain,
+                                "Remark".to_string(),
+                                remark_tx.clone(),
+                            )?;
+                            println!("generated the following remark tx: {:?}", remark_tx);
+                            println!("inserting logs");
+                            log_db.insert_logs(
+                                scenario_id.clone(),
+                                "Remark transaction generated".to_string(),
+                            )?;
+                        }
+                        "xTransfer" => {
+                            println!("xTransfer tx type detected");
+
+                            // need to convert it to the raw balance using the asset decimals
+                            let original_amount = d_amount
+                                .parse::<u64>()
+                                .expect("could not convert amount to u64");
+                            let token_decimals = get_token_decimals_by_chain_name(&s_chain); // == one dot
+                            let converted_amount =
+                                original_amount * 10u64.pow(token_decimals as u32);
+                            //             let s_chain = chain_node.source_chain.clone();
+                            //            let d_chain = chain_node.dest_chain.clone();
+                            //             let d_amount = chain_node.amount.clone();
+                            //            let s_assetid = chain_node.assetid.clone();
+                            //           let d_address = chain_node.dest_address.clone();
+                            //           let tx_response: String =
+                            println!("Converted amount: {:?}", converted_amount);
+                            let tx_response = match generate_tx(
+                                s_chain.clone(),
+                                d_chain,
+                                converted_amount.to_string(), // this should be
+                                s_assetid,
+                                d_address,
+                            )
+                            .await
+                            {
+                                Ok(value) => value.txdata, // if all good return the txdata
+                                _ => "Could not generate transaction".to_string(),
+                            };
+                            log_db.insert_logs(scenario_id.clone(), tx_response.clone())?;
+                            log_db.insert_tx(
+                                scenario_id.clone(),
+                                converted_amount.to_string(),
+                                s_chain,
+                                "xTransfer".to_string(),
+                                tx_response,
+                            )?;
+                            log_db.insert_logs(
+                                scenario_id.clone(),
+                                "xTransfer transaction type".to_string(),
+                            )?;
+                        }
+                        "swap" => {
+                            //              hydra_swaps
+                            let d_assetid = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get assetid")
+                                .target
+                                .assetId
+                                .expect("no assetid");
+                            println!("swap tx type detected");
+                            let tx_swap = match hydra_swaps(
+                                s_assetid,
+                                d_assetid.to_string(),
+                                d_amount.clone(),
+                            )
+                            .await
+                            {
+                                Ok(swap_tx) => swap_tx,
+                                Err(error) => {
+                                    println!("error: {:?}", error);
+                                    log_db.insert_logs(
+                                        scenario_id.clone(),
+                                        "Could not generate swap transaction".to_string(),
+                                    )?;
+                                    return Err(Error::ScenarioParseError);
+                                }
+                            }
+                            .txdata;
+                            log_db.insert_tx(
+                                scenario_id.clone(),
+                                d_amount.to_string(),
+                                s_chain,
+                                "swap".to_string(),
+                                tx_swap,
+                            )?;
+                            log_db.insert_logs(
+                                scenario_id.clone(),
+                                "Swap transaction generated".to_string(),
+                            )?;
+
+                            println!("swap tx okay");
+                            log_db.insert_logs(
+                                scenario_id.clone(),
+                                "Swap transaction type".to_string(),
+                            )?;
+                        }
+
+                        _ => {
+                            println!("Unknown transaction type ");
+                            log_db.insert_logs(
+                                scenario_id.clone(),
+                                "Unknown transaction type".to_string(),
+                            )?;
+                        }
+                    };
+
                     println!("Log entry go: {:?}", log_entry_go);
                     log_db.insert_logs(scenario_id.clone(), log_entry_go.clone())?;
 
-                    // need to convert it to the raw balance using the asset decimals
-                    let original_amount = d_amount.parse::<u64>().expect("could not convert amount to u64");
-                    let token_decimals = get_token_decimals_by_chain_name(&s_chain); // == one dot
-                    let converted_amount = original_amount * 10u64.pow(token_decimals as u32);
-                    //             let s_chain = chain_node.source_chain.clone();
-                    //            let d_chain = chain_node.dest_chain.clone();
-                    //             let d_amount = chain_node.amount.clone();
-                    //            let s_assetid = chain_node.assetid.clone();
-                    //           let d_address = chain_node.dest_address.clone();
-                    //           let tx_response: String =
-                    println!("Converted amount: {:?}", converted_amount);
-                    let tx_response = match generate_tx(
-                        s_chain.clone(),
-                        d_chain,
-                        converted_amount.to_string(), // this should be 
-                        s_assetid,
-                        d_address,
-                    )
-                    .await
-                    {
-                        Ok(value) => value.txdata, // if all good return the txdata
-                        _ => "Could not generate transaction".to_string(),
-                    };
-                    log_db.insert_logs(scenario_id.clone(), tx_response.clone())?;
-                    log_db.insert_tx(
-                        scenario_id.clone(),
-                        converted_amount.to_string(),
-                        s_chain,
-                        "xTransfer".to_string(),
-                        tx_response,
-                    )?;
                     println!("Action node: {:?}", chain_node);
                     log_db
                         .insert_logs(scenario_id.clone(), "Building Action request".to_string())?;

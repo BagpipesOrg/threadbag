@@ -218,13 +218,14 @@ pub struct Source {
     pub address: String,
     pub amount: String,
     pub symbol: Option<String>,
-    pub delay: Option<String>, // Change the type accordingly
+    pub delay: Option<String>,  // Change the type accordingly
+    pub target: Option<String>, // used for remark
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Target {
     pub chain: String,
-    pub assetid: Option<StringOrNumber>,
+    pub assetId: Option<StringOrNumber>,
     pub address: Option<String>,
     pub symbol: Option<String>,
 }

@@ -17,10 +17,32 @@ use serde_json::json;
 */
 //use std::collections::HashMap;
 
+fn get_api_url() -> String {
+    return "http://localhost:8080".to_string();
+}
+
 // Define the struct representing the response
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TxAssetTransferResponse {
     pub txdata: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct generic_result {
+    pub result: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RemarkRequest {
+    chain: String,
+    msg: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SwapRequest {
+    pub assetin: String,
+    pub assetout: String,
+    pub amount: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -51,12 +73,71 @@ pub async fn generate_tx(
         "amount": amount,//1000000000,
         "destinationaddress": "5GYdCV9F3gg9gnmWU8nrt8tXCxMXDbcGpsdX1gJStCx9yZKK"
     });
-    let _api_base = "https://api.bagpipes.io";
+    // let api_base = get_api_url();//"https://api.bagpipes.io";
+    let url = format!("{}/api/actions/xcm/asset-transfer", get_api_url());
 
     let response = client
-        .post("https://api.bagpipes.io/xcm-asset-transfer")
+        .post(url)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .json(&payload)
+        .send()
+        .await?;
+
+    let body: TxAssetTransferResponse = response.json().await?;
+    println!("Response body: {:?}", body);
+
+    Ok(body)
+}
+
+// curl -X POST -H "Content-Type: application/json" -d '{"chain": "polkadot", "msg": "hack the planet"}' http://localhost:8080/api/actions/system-remark    -v
+pub async fn system_remark(chain: String, msg: String) -> Result<generic_result, Error> {
+    let client = Client::new();
+    println!("System remark called with: {:?} {:?}", chain, msg);
+    let request_body: RemarkRequest = RemarkRequest {
+        chain: chain,
+        msg: msg,
+    };
+
+    //   let api_base = get_api_url();//"https://api.bagpipes.io";
+    let url = format!("{}/api/actions/system-remark", get_api_url());
+
+    println!("making request: {:?}", url);
+    let response = client
+        .post(url)
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .json(&request_body)
+        .send()
+        .await?;
+    println!("Response: {:?}", response);
+    let body: generic_result = response.json().await?;
+    println!("Response body: {:?}", body);
+
+    Ok(body)
+}
+
+/// HydraDX swaps
+/// '{"assetin": "0", "assetout": "5", "amount": 100 }' http://localhost:8080/create/swap
+/// (assetin: number, assetout: number, amount: number
+pub async fn hydra_swaps(
+    assetin: String,
+    assetout: String,
+    amount: String,
+) -> Result<TxAssetTransferResponse, Error> {
+    let client = Client::new();
+
+    let request_body: SwapRequest = SwapRequest {
+        assetin: assetin,
+        assetout: assetout,
+        amount: amount,
+    };
+
+    // let api_base = ;//"https://api.bagpipes.io";
+    let url = format!("{}/api/actions/swap/create", get_api_url());
+
+    let response = client
+        .post(url)
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .json(&request_body)
         .send()
         .await?;
 

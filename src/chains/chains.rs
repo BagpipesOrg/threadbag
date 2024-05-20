@@ -12,12 +12,10 @@ pub enum chains {
     Assethub,
 }
 
-
 pub struct asset_decimal_info {
     chain: String,
-    asset_decimals: u64, 
+    asset_decimals: u64,
 }
-
 
 #[derive(Debug)]
 struct AssetChainInfo {
@@ -67,7 +65,6 @@ pub fn list_chains() -> HashMap<u64, AssetChainInfo> {
         relay: false,
     };
     chain_list.insert(3000, KusamaAssethub);
-
 
     let RococoAssethub: AssetChainInfo = AssetChainInfo {
         name: "rococo_assethub".to_string(),
@@ -124,7 +121,6 @@ pub fn list_chains() -> HashMap<u64, AssetChainInfo> {
     };
     chain_list.insert(21108, MangataX);
 
-
     let Interlay: AssetChainInfo = AssetChainInfo {
         name: "interlay".to_string(),
         paraid: 2032,
@@ -136,15 +132,11 @@ pub fn list_chains() -> HashMap<u64, AssetChainInfo> {
     };
     chain_list.insert(2032, Interlay);
 
-
-
-
     // Return the HashMap
     chain_list
 }
 
-
-pub fn  get_token_decimals_by_chain_name(chain_name: &str) -> u64 {
+pub fn get_token_decimals_by_chain_name(chain_name: &str) -> u64 {
     let chain_list = list_chains();
     let selected_chain = chain_list.values().find(|&chain| chain.name == chain_name);
 
@@ -155,12 +147,10 @@ pub fn  get_token_decimals_by_chain_name(chain_name: &str) -> u64 {
 }
 
 pub fn get_asset_decimals_for_chain(chain: String) {
-//    match chain {
+    //    match chain {
 
-  //  }
-
+    //  }
 }
-
 
 /// return the rpc endpoint to use
 pub fn get_rpc_endpoint(chain_select: chains) -> String {
