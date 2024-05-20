@@ -61,58 +61,27 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
 
         println!("----------Start---------------");
         for action_node in o3.nodes {
-            match action_node {
+            println!("looping at action node: {:?}", action_node);
+            match action_node.clone() {
                 MultiNodes::Action(chain_node) => {
                     println!("action node detected");
                     let form_me = chain_node.clone().formData.expect("");
+                    println!("form_me is; {:?}", form_me);
                     let txtype = form_me.action.expect("could not get tx type");
-                    let s_chain = form_me
-                        .actionData
-                        .clone()
-                        .expect("could not get source.chain")
-                        .source
-                        .chain;
-                    let d_chain = form_me
-                        .actionData
-                        .clone()
-                        .expect("could not get target.chain")
-                        .target
-                        .chain;
-                    let s_address = form_me
-                        .actionData
-                        .clone()
-                        .expect("could not get source.address")
-                        .source
-                        .address;
-                    let d_address = form_me
-                        .actionData
-                        .clone()
-                        .expect("could not get target address")
-                        .target
-                        .address
-                        .expect("target address problem");
 
-                    let d_amount = form_me
-                        .actionData
-                        .clone()
-                        .expect("could not get source.amount")
-                        .source
-                        .amount;
-                    let s_assetid = form_me
-                        .actionData
-                        .clone()
-                        .expect("could not get assetid")
-                        .source
-                        .assetId
-                        .expect("no assetid")
-                        .to_string();
-
+                    println!("Chain node: {:?}", chain_node);
                     println!("Formdata: {:?}", form_me.actionData);
-                    let log_entry_go =
-                        format!("Drafting {} tx from {} to {}", txtype, s_chain, d_chain);
+                    //                  let log_entry_go =
+                    //                     format!("Drafting {} tx from {} to {}", txtype, s_chain, d_chain);
                     println!("matching tx type: {:?}", txtype.clone());
                     match txtype.as_ref() {
                         "Remark" => {
+                            let s_chain = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get source.chain")
+                                .source
+                                .chain;
                             println!("remark tx type detected");
                             let remarkme = match form_me
                                 .actionData
@@ -155,7 +124,47 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         }
                         "xTransfer" => {
                             println!("xTransfer tx type detected");
+                            println!("action: {:?}", action_node);
+                            let s_chain = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get source.chain")
+                                .source
+                                .chain;
+                            let d_chain = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get target.chain")
+                                .target
+                                .chain;
+                            let s_address = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get source.address")
+                                .source
+                                .address;
+                            let d_address = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get target address")
+                                .target
+                                .address
+                                .expect("target address problem");
 
+                            let d_amount = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get source.amount")
+                                .source
+                                .amount;
+                            let s_assetid = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get assetid")
+                                .source
+                                .assetId
+                                .expect("no assetid")
+                                .to_string();
                             // need to convert it to the raw balance using the asset decimals
                             let original_amount = d_amount
                                 .parse::<u64>()
@@ -180,8 +189,13 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                             .await
                             {
                                 Ok(value) => value.txdata, // if all good return the txdata
+                                Err(error) => {
+                                    println!("Error is: {:?}", error);
+                                    "Could not generate transaction".to_string()
+                                }
                                 _ => "Could not generate transaction".to_string(),
                             };
+                            println!("xTransfer tx: {:?}", tx_response);
                             log_db.insert_logs(scenario_id.clone(), tx_response.clone())?;
                             log_db.insert_tx(
                                 scenario_id.clone(),
@@ -197,6 +211,18 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         }
                         "swap" => {
                             //              hydra_swaps
+                            let s_chain = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get source.chain")
+                                .source
+                                .chain;
+                            let d_amount = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get source.amount")
+                                .source
+                                .amount;
                             let d_assetid = form_me
                                 .actionData
                                 .clone()
@@ -205,6 +231,14 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                                 .assetId
                                 .expect("no assetid");
                             println!("swap tx type detected");
+                            let s_assetid = form_me
+                                .actionData
+                                .clone()
+                                .expect("could not get assetid")
+                                .source
+                                .assetId
+                                .expect("no assetid")
+                                .to_string();
                             let tx_swap = match hydra_swaps(
                                 s_assetid,
                                 d_assetid.to_string(),
@@ -212,7 +246,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                             )
                             .await
                             {
-                                Ok(swap_tx) => swap_tx,
+                                Ok(swap_tx) => swap_tx.swap.swap_tx,
                                 Err(error) => {
                                     println!("error: {:?}", error);
                                     log_db.insert_logs(
@@ -221,8 +255,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                                     )?;
                                     return Err(Error::ScenarioParseError);
                                 }
-                            }
-                            .txdata;
+                            };
                             log_db.insert_tx(
                                 scenario_id.clone(),
                                 d_amount.to_string(),
@@ -251,8 +284,8 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         }
                     };
 
-                    println!("Log entry go: {:?}", log_entry_go);
-                    log_db.insert_logs(scenario_id.clone(), log_entry_go.clone())?;
+                    //   println!("Log entry go: {:?}", log_entry_go);
+                    //   log_db.insert_logs(scenario_id.clone(), log_entry_go.clone())?;
 
                     println!("Action node: {:?}", chain_node);
                     log_db
