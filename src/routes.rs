@@ -14,7 +14,7 @@ use std::sync::Arc;
 
 #[get("/")]
 pub async fn info() -> HttpResponse {
-    HttpResponse::Ok().body("Documentation: https://xcmsend.github.io/api/index.html")
+    HttpResponse::Ok().body("Threadbag Documentation: https://docs.bagpipes.io/docs/api/threadbag")
 }
 
 // open channels, list open ingoing and outgoing hrmp channels for paraid
