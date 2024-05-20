@@ -1,9 +1,9 @@
+use crate::error::Error;
 use reqwest;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-
-use crate::error::Error;
 use serde_json::json;
+use tokio::time::Duration;
 
 // api types
 /*
@@ -25,6 +25,18 @@ fn get_api_url() -> String {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TxAssetTransferResponse {
     pub txdata: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SwapResponse {
+    pub success: bool,
+    pub swap: swap_datan,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct swap_datan {
+    pub swap_tx: String,
+    pub scenarioid: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -71,10 +83,11 @@ pub async fn generate_tx(
         "destchain": dest_chain,//"assetHub",
         "assetid": assetid, //"0",
         "amount": amount,//1000000000,
-        "destinationaddress": "5GYdCV9F3gg9gnmWU8nrt8tXCxMXDbcGpsdX1gJStCx9yZKK"
+        "destinationaddress": dest_account
     });
+    println!("Built payload: {:?}", payload);
     // let api_base = get_api_url();//"https://api.bagpipes.io";
-    let url = format!("{}/api/actions/xcm/asset-transfer", get_api_url());
+    let url = format!("{}/api/actions/xcm-asset-transfer", get_api_url());
 
     let response = client
         .post(url)
@@ -122,9 +135,9 @@ pub async fn hydra_swaps(
     assetin: String,
     assetout: String,
     amount: String,
-) -> Result<TxAssetTransferResponse, Error> {
+) -> Result<SwapResponse, Error> {
     let client = Client::new();
-
+    println!("Input: {:?} {:?} {:?}", assetin, assetout, amount);
     let request_body: SwapRequest = SwapRequest {
         assetin: assetin,
         assetout: assetout,
@@ -133,15 +146,16 @@ pub async fn hydra_swaps(
 
     // let api_base = ;//"https://api.bagpipes.io";
     let url = format!("{}/api/actions/swap/create", get_api_url());
-
+    println!("url: {}", url);
     let response = client
         .post(url)
+        .timeout(Duration::from_secs(60))
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .json(&request_body)
         .send()
         .await?;
-
-    let body: TxAssetTransferResponse = response.json().await?;
+    //println!("response: {:?}", response.json());
+    let body: SwapResponse = response.json().await?;
     println!("Response body: {:?}", body);
 
     Ok(body)
