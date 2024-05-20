@@ -67,11 +67,6 @@ Made with: A Tokio runtime, Polodb + Sled, Subxt and actix-web.
 
 Backwards compatible with Bagpipes API   
 
-## Install
-- Make sure you have rust installed: https://www.rust-lang.org/tools/install
-- updated rust(`rustup update`)
-- Git clone: `git clone https://github.com/XcmSend/threadbag && cd threadbag/`
-- run: `make build`
 
 ## Run tests:
 ```shell
@@ -254,3 +249,19 @@ TODO
 
 #### dot_openchannels    
 TODO  
+
+
+### Remark tx:
+```
+ python3.7 test_req.py 
+Creating scenario..
+Response: 
+{"success":true,"shortUrl":"hPqXsvHQm"}
+Scenario id saved as: hPqXsvHQm
+Starting job: 
+start job response: {'success': True, 'result': 'Job started'}
+sleeping for 10 seconds.. 
+Quering logs for:  hPqXsvHQm
+Logs returned:  {"success":true,"result":["Starting worker","Decoding payload..","Parsed scenario data","Remark transaction generated","Drafting Remark tx from assetHub to assetHub","Building Action request","Building ChainNode request","Building ChainNode request","Building ChainNode request","Could not generate transaction","xTransfer transaction type","Drafting xTransfer tx from assetHub to hydraDx","Building Action request","workload executed","Sleeping"]}
+Getting transaction queue:  {"mempool":[{"chain":"assetHub","amount":"0","txType":"Remark","Date":"2024-05-19T22:50:11.827281773Z","tx":"0x2404000714666c756666"},{"chain":"assetHub","amount":"1230000000000","txType":"xTransfer","Date":"2024-05-19T22:50:11.838491720Z","tx":"Could not generate transaction"}]}
+```

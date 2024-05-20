@@ -18,13 +18,13 @@ pub async fn info() -> HttpResponse {
 }
 
 // open channels, list open ingoing and outgoing hrmp channels for paraid
-#[post("/api/hrmp/polkadot/openchannels")]
+#[post("/polkadot/openchannels")]
 pub async fn dot_openchannels() -> HttpResponse {
     HttpResponse::Ok().body("Todo!")
 }
 
 // broadcast input: {chain: 'hydradx', tx: ''}
-#[post("/api/chain/broadcast")]
+#[post("/broadcast")]
 pub async fn broadcast_tx(data: web::Json<BroadcastInput>) -> web::Json<BroadcastStatus> {
     web::Json(BroadcastStatus {
         status: "fail".to_string(),
@@ -32,7 +32,7 @@ pub async fn broadcast_tx(data: web::Json<BroadcastInput>) -> web::Json<Broadcas
     })
 }
 
-#[post("/api/template/saveUrl")]
+#[post("/saveUrl")]
 pub async fn save_url(
     data: web::Json<Urldata>,
     db: web::Data<DBhandler>,
@@ -48,7 +48,7 @@ pub async fn save_url(
     })
 }
 
-#[get("/api/template/getUrl/{name}")]
+#[get("/getUrl/{name}")]
 pub async fn get_url(
     name: web::Path<String>,
     db: web::Data<DBhandler>,
@@ -77,7 +77,7 @@ pub async fn get_url(
     })
 }
 
-#[post("/api/actions/xcm/asset-transfer")]
+#[post("/xcm-asset-transfer")]
 pub async fn xcm_asset_transfer() -> HttpResponse {
     HttpResponse::Ok().body("Todo!")
 }
@@ -88,7 +88,7 @@ pub async fn xcm_asset_transfer() -> HttpResponse {
 ///    pub delay: u64,        
 ///}        
 /// start a scenario worker
-#[post("/api/scenario/persist/job/start")]
+#[post("/job/start")]
 pub async fn start_job(
     data: web::Json<ScenarioInfo>, // job_start
     tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
@@ -116,10 +116,9 @@ pub async fn start_job(
     });
 }
 
-
 /// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWg"}' http://localhost:8081/job/start -v
 /// Threadbags mempool
-#[post("/api/scenario/tx")]
+#[post("/scenario/tx")]
 pub async fn scenario_transactions(
     data: web::Json<ScenarioInfo>,
     db: web::Data<Loghandler>,
@@ -139,7 +138,7 @@ curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http:/
 {"success":true,"result":[{"source_chain":"polkadot","source_address":"5GdvmQtUwByTt6Vkx41vtWvg5guyaH3BL2yn6iamg1RViiKD","dest_chain":"assetHub","dest_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","assetid":"0","amount":"1","txtype":"swap","tx":"not set"},{"source_chain":"assetHub","source_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","dest_chain":"hydraDx","dest_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","assetid":"3","amount":"2","txtype":"swap","tx":"not set"},{"source_chain":"hydraDx","source_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","dest_chain":"hydraDx","dest_address":"5D7RT7vqgZKUoKxrPMihNeXBzhrmWjd5meprfUFhtrULJ4ng","assetid":"5","amount":"2","txtype":"swap","tx":"not set"}]}
 */
 
-#[post("/api/scenario/info")]
+#[post("/scenario/info")]
 pub async fn scenario_info(
     data: web::Json<ScenarioInfo>,
     db: web::Data<DBhandler>,
@@ -193,7 +192,7 @@ pub async fn scenario_info(
 }
 
 // scenario workers
-#[get("/api/scenario/all_workers")]
+#[get("/scenario/all_workers")]
 pub async fn list_all_threads(data: web::Data<Arc<ThreadManager>>) -> HttpResponse {
     let active_threads = data.get_active_threads();
     println!("listning threads!");
@@ -202,7 +201,7 @@ pub async fn list_all_threads(data: web::Data<Arc<ThreadManager>>) -> HttpRespon
 
 // curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http://localhost:8081/scenario/info -v
 /// query single scenario worker
-#[post("/api/scenario/worker/")]
+#[post("/scenario/worker/")]
 pub async fn list_single_thread(
     postdata: web::Json<ScenarioInfo>,
     data: web::Data<Arc<ThreadManager>>,
@@ -216,7 +215,7 @@ pub async fn list_single_thread(
 // curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http://localhost:8081/scenario/worker/logs -v
 /// get execution logs | get the history of the executed scenario
 /// Returns a list of logs for the entry in a Vec<String>
-#[post("/api/scenario/worker/logs")]
+#[post("/scenario/worker/logs")]
 pub async fn get_logs(
     postdata: web::Json<ScenarioInfo>,
     l_db: web::Data<Loghandler>,
@@ -238,7 +237,7 @@ pub async fn get_logs(
 }
 
 // test a http action
-#[post("/api/actions/http/dry_run")]
+#[post("/action/http/dry_run")]
 pub async fn dry_run_http() -> web::Json<GenericOut> {
     return web::Json(GenericOut {
         success: false,

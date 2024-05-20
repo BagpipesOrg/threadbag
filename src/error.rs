@@ -17,6 +17,9 @@ pub enum Error {
     /// Subxt could not draft tx error
     SubxtError(subxt::Error),
 
+    /// Error parsing scenario
+    ScenarioParseError,
+
     /// Invalid scenarioid
     ScenarioIdNotFound,
 
