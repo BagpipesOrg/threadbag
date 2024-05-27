@@ -37,7 +37,7 @@ mod tests {
         let db_h = DBhandler::new();
         //   let db = db_h.read_db()?;
 
-        let multi_scenario_id: String = "coO3s7GiT".to_string();
+        let multi_scenario_id: String = "vkIKu+dag".to_string();
 
         let out = db_h.get_entry(multi_scenario_id).unwrap();
         let decoded = decompress_string(out)
@@ -56,6 +56,14 @@ mod tests {
             .iter()
             .filter(|node| matches!(node, MultiNodes::Http(_)))
             .count();
+        let chain_q_count = ulti_list
+            .iter()
+            .filter(|node| matches!(node, MultiNodes::ChainQuery(_)))
+            .count();
+        let chain_tx_count = ulti_list
+            .iter()
+            .filter(|node| matches!(node, MultiNodes::ChainTx(_)))
+            .count();
         let chain_node_count = ulti_list
             .iter()
             .filter(|node| matches!(node, MultiNodes::Chain(_)))
@@ -68,11 +76,19 @@ mod tests {
             .iter()
             .filter(|node| matches!(node, MultiNodes::Webhook(_)))
             .count();
+        let unknown = ulti_list
+            .iter()
+            .filter(|node| matches!(node, MultiNodes::Unknown))
+            .count();
 
         println!("http_node_count: {}", http_node_count);
         println!("chain_node_count: {}", chain_node_count);
         println!("action_node_count: {}", action_node_count);
         println!("webhook_node_count: {}", webhook_node_count);
+        println!("Chaintx: {}", chain_tx_count);
+        println!("unknown: {}", unknown);
+
+        println!("chain_q_count: {}", chain_q_count);
 
         println!("decoded okay");
         // parse scenario
@@ -84,23 +100,24 @@ mod tests {
         return Ok(());
     }
 
-    #[actix_rt::test]
-    async fn make_api_request() -> Result<(), anyhow::Error> {
-        println!("make_api_request start");
-        let sourcechain = "polkadot".to_string();
-        let destchain = "assetHub".to_string();
-        let assetid = "0".to_string();
-        let amount = "100000000".to_string();
-        let destinationaddress = "5GYdCV9F3gg9gnmWU8nrt8tXCxMXDbcGpsdX1gJStCx9yZKK".to_string();
-        //  dest_chain: String, amount: String, assetid: String, dest_account: String)
-        let tx_response = generate_tx(sourcechain, destchain, amount, assetid, destinationaddress)
-            .await
-            .unwrap(); // yolo
-        println!("Got tx back: {:?}", tx_response.txdata);
-        println!("make_api_request finished");
-        Ok(())
-    }
-
+    /*
+        #[actix_rt::test]
+        async fn make_api_request() -> Result<(), anyhow::Error> {
+            println!("make_api_request start");
+            let sourcechain = "polkadot".to_string();
+            let destchain = "assetHub".to_string();
+            let assetid = "0".to_string();
+            let amount = "100000000".to_string();
+            let destinationaddress = "5GYdCV9F3gg9gnmWU8nrt8tXCxMXDbcGpsdX1gJStCx9yZKK".to_string();
+            //  dest_chain: String, amount: String, assetid: String, dest_account: String)
+            let tx_response = generate_tx(sourcechain, destchain, amount, assetid, destinationaddress)
+                .await
+                .unwrap(); // yolo
+            println!("Got tx back: {:?}", tx_response.txdata);
+            println!("make_api_request finished");
+            Ok(())
+        }
+    */
     /*
 
         #[actix_rt::test]

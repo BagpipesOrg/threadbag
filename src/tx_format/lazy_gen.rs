@@ -3,6 +3,7 @@ use reqwest;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use serde_json::value::Value as SerdeValue;
 use tokio::time::Duration;
 
 // api types
@@ -18,13 +19,20 @@ use tokio::time::Duration;
 //use std::collections::HashMap;
 
 fn get_api_url() -> String {
-    return "http://localhost:8080".to_string();
+    return "https://api.bagpipes.io".to_string(); //http://localhost:8080
 }
 
 // Define the struct representing the response
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TxAssetTransferResponse {
     pub txdata: String,
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GenTxGen {
+    chain: String,
+    pallet_name: String,
+    method_name: String,
+    params: Vec<u8>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -156,6 +164,91 @@ pub async fn hydra_swaps(
         .await?;
     //println!("response: {:?}", response.json());
     let body: SwapResponse = response.json().await?;
+    println!("Response body: {:?}", body);
+
+    Ok(body)
+}
+
+pub async fn getwebhook_data(uuid: String) -> Result<SerdeValue, Error> {
+    let url = format!("{}/api/webhook/fetchWebhookData/{}", get_api_url(), uuid);
+    let client = Client::new();
+    let resp = client
+        .get(url)
+        .timeout(Duration::from_secs(60))
+        .send()
+        .await?;
+
+    let vl: SerdeValue = resp.json().await?;
+
+    return Ok(vl);
+}
+
+/*
+curl -X POST -H "Content-Type: application/json" -d '{"chain": "polkadot", "pallet_name": "timestamp", "method_name": "now", "params": []}' http://localhost:8080/api/actions/query
+*/
+pub async fn query_chain(
+    chain: String,
+    pallet_name: String,
+    method_name: String,
+    params: Vec<u8>,
+) -> Result<generic_result, Error> {
+    let client = Client::new();
+
+    let request_body: GenTxGen = GenTxGen {
+        chain: chain,
+        pallet_name: pallet_name,
+        method_name: method_name,
+        params: params,
+    };
+
+    let url = format!("{}/api/actions/query", get_api_url());
+
+    println!("making request: {:?}", url);
+    let response = client
+        .post(url)
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .json(&request_body)
+        .send()
+        .await?;
+
+    let body: generic_result = response.json().await?;
+    println!("Response body: {:?}", body);
+
+    Ok(body)
+}
+
+/*
+curl -X POST -H "Content-Type: application/json" -d '{"chain": "polkadot", "pallet_name": "System", "method_name": "remark", "params": ["0xDEADBEEF"]}' http://localhost:8080/api/actions/generic-tx-gen
+{"result":"0x2004000010deadbeef"}
+
+*/
+
+pub async fn generic_tx_gen(
+    chain: String,
+    pallet_name: String,
+    method_name: String,
+    params: Vec<u8>,
+) -> Result<generic_result, Error> {
+    let client = Client::new();
+
+    let request_body: GenTxGen = GenTxGen {
+        chain: chain,
+        pallet_name: pallet_name,
+        method_name: method_name,
+        params: params,
+    };
+
+    let url = format!("{}/api/actions/generic-tx-gen", get_api_url());
+
+    println!("making request: {:?}", url);
+    let response = client
+        .post(url)
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .json(&request_body)
+        .send()
+        .await?;
+
+    let body: generic_result = response.json().await?;
     println!("Response body: {:?}", body);
 
     Ok(body)

@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use std::collections::HashMap;
 use std::option;
 
 use serde::{Deserialize, Serialize};
@@ -174,8 +175,12 @@ pub enum MultiNodes {
     Chain(ChainNode),
     #[serde(rename = "action")]
     Action(ChainNode),
+    #[serde(rename = "chainTx")]
+    ChainTx(ChainNode),
+    #[serde(rename = "chainQuery")]
+    ChainQuery(ChainNode),
     #[serde(rename = "webhook")]
-    Webhook(ChainNode),
+    Webhook(ChainNode), //WebhookNode
     #[serde(other)]
     Unknown,
 }
@@ -201,7 +206,32 @@ pub struct FormData {
     pub evaluateErrors: Option<String>,
     pub url: Option<String>,
     pub method: Option<String>,
+    pub selectedMethod: Option<SelectedMethod3>,
+    pub selectedChain: Option<String>,
+    pub selectedPallet: Option<String>,
     pub connectionType: Option<String>,
+    pub uuid: Option<String>,
+    pub webhookName: Option<String>,
+    pub params: Option<HashMap<String, String>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SelectedMethod3 {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub method_type: String,
+    pub docs: String,
+    pub fields: Vec<MethodField3>,
+    pub index: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MethodField3 {
+    pub name: String,
+    #[serde(rename = "type")]
+    field_type: String,
+    pub typeName: String,
+    pub docs: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

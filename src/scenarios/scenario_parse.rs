@@ -46,6 +46,12 @@ pub fn convert_to_multinode(scenario_data: Graph) -> Graph2 {
             "webhook" => {
                 ulti_list.push(MultiNodes::Webhook(node));
             }
+            "chainTx" => {
+                ulti_list.push(MultiNodes::ChainTx(node));
+            }
+            "chainQuery" => {
+                ulti_list.push(MultiNodes::ChainQuery(node));
+            }
             "http" => {
                 let formdata = node.formData.expect("could not find formdata");
                 //            println!("Formdata: {:?}", formdata);
