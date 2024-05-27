@@ -67,11 +67,29 @@ Made with: A Tokio runtime, Polodb + Sled, Subxt and actix-web.
 
 Backwards compatible with Bagpipes API   
 
+Threadbag Comes with a Make file: 
+Build:       
+```shell
+make build
+```
+Test:    
+```shell
+make test
+```
+
+#### Hard kill (-9) threadbag:
+```shell
+make kill_threadbag
+```
+```
 
 ## Run tests:
 ```shell
 $ cargo test -- --nocapture
 ```
+
+
+
 
 ## How-to:  
 -  Make a scenario with Bagpipes main UI     

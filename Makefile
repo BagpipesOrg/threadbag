@@ -15,3 +15,6 @@ build:
 
 checkdep:
 	cargo +nightly udeps
+
+kill_threadbag:
+	@ps waux | grep '[t]hreadbag' | awk '{print $$2}' | xargs -r kill -9

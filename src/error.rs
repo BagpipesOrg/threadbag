@@ -25,7 +25,11 @@ pub enum Error {
 
     /// Invalid destination chain
     InvalidDestinationChain,
+    /// Invalid chain selected
+    InvalidChainOption,
 
+    /// problem parsing the uuid from the webhook
+    CouldNotFindWebhookData,
     /// problems making a http request
     HTTPRequestProblem(reqwest::Error),
 
