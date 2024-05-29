@@ -36,8 +36,30 @@ pub fn cors_middleware() -> Cors {
         .allow_any_origin()
         .allow_any_method()
         .allow_any_header()
-    //     .supports_credentials()
+        .supports_credentials()
 }
+
+
+// pub fn cors_middleware() -> Cors {
+//     let mut cors = Cors::default()
+//         .allow_any_method()
+//         .allow_any_header()
+//         .supports_credentials();
+
+//     if cfg!(debug_assertions) {
+//         // Development environment
+//         cors = cors.allowed_origin("http://localhost:5173");
+//     } else {
+//         // Production environment
+//         cors = cors
+//             .allowed_origin("https://alpha.bagpipes.io")
+//             .allowed_origin("https://app.bagpipes.io")
+//             .allowed_origin("https://api.bagpipes.io");
+//     }
+
+//     cors
+// }
+
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

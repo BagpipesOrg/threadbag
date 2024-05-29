@@ -231,14 +231,14 @@ print("Getting transaction queue: ", txmempool.text)
 
 
 
-#### start_job     
+#### job_start     
 Start a scenario worker, after you have started the scenario, you will be able to query for logs and transactions in que.   
-###### Path: `/job/start`    
+###### Path: `/api/scenario/persist/job/start`    
 
 ###### Code example:  
 ```python 
 print("Starting job: ")
-js = requests.post(base+"/job/start", json={"id": scenario_id})
+js = requests.post(base+"/api/scenario/persist/job/start", json={"id": scenario_id})
 print("start job response:", js.json())
 ```
 
