@@ -3,17 +3,20 @@ mod tests {
     use super::*;
     use crate::database::decode::decompress_string;
     use crate::scenarios::scenario_parse::{convert_to_multinode, scenario_information};
-    use crate::scenarios::scenario_types::ScenarioSummary;
-    use crate::scenarios::scenario_types::TxType;
+    // use crate::scenarios::scenario_types::ScenarioSummary;
+    //use crate::scenarios::scenario_types::TxType;
+    use crate::scenarios::pill_parse::extract_pill;
+    use crate::scenarios::pill_parse::process_node;
     use crate::scenarios::scenario_types::{
         ChainNode, Edge, Graph, HTTPNode, MaNodes, HTTP_NODE_FORMDATA,
     };
     use crate::scenarios::scenario_types::{Graph2, MultiNodes};
+    use crate::scenarios::websockets::latest_webhookevents;
     use crate::{database::db::DBhandler, tx_format::lazy_gen::generate_tx};
     use serde::{Deserialize, Serialize};
     use serde_json::{Result as SerdeResult, Value};
+    use std::collections::{HashMap, HashSet};
     use std::fmt::format;
-
     //use crate::chains::chains::{chains, get_rpc_endpoint};
     //use crate::database::db::DBhandler;
     //use crate::database::decode::decompress_string;
@@ -32,71 +35,121 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn test_mulit_type_node() -> Result<(), anyhow::Error> {
-        println!("Starting test_mulit_type_node");
+    async fn test_websocks() -> Result<(), anyhow::Error> {
+        let multi_scenario_id: String = "@CvAej5pE".to_string();
         let db_h = DBhandler::new();
-        //   let db = db_h.read_db()?;
-
-        let multi_scenario_id: String = "vkIKu+dag".to_string();
-
         let out = db_h.get_entry(multi_scenario_id).unwrap();
         let decoded = decompress_string(out)
             .await
             .expect("Failed to decompress string, invalid value");
-        println!("decoded ok");
-        println!("Decoded as: {}", decoded);
-        // Decoded diagram data json
+
         let graph_result: SerdeResult<Graph> = serde_json::from_str(decoded.as_str());
 
         let g2: Graph2 = convert_to_multinode(graph_result.expect("could not parse graph"));
         let ulti_list = g2.nodes;
+        let mut webhook_loot: HashMap<String, Value> = HashMap::new();
+        for node in ulti_list {
+            match node {
+                MultiNodes::Webhook(node) => {
+                    //      println!("webhook node detected: {:?}", node);
+                    let uuid = node.formData.unwrap().uuid.unwrap();
+                    println!("got the uuid: {}", uuid);
+                    let latest_data: HashMap<String, Value> =
+                        latest_webhookevents(uuid).await.unwrap();
+                    println!("Latest data got back from uuid: {:?}", latest_data);
+                    webhook_loot.extend(latest_data);
+                }
+                MultiNodes::Http(node) => {
+                    println!("http node detected: {:?}", node);
+                    let mut node_copy = node.clone();
+                    let _ = process_node(&mut node_copy, &webhook_loot);
+                    println!("New node: {:?}", node_copy);
+                    // let url_test_data = node.formData.unwrap().url;
+                    //  println!("Extracted url data: {:?}", url_test_data);
+                }
 
-        println!("Amount in loot: {}", ulti_list.len());
-        let http_node_count = ulti_list
-            .iter()
-            .filter(|node| matches!(node, MultiNodes::Http(_)))
-            .count();
-        let chain_q_count = ulti_list
-            .iter()
-            .filter(|node| matches!(node, MultiNodes::ChainQuery(_)))
-            .count();
-        let chain_tx_count = ulti_list
-            .iter()
-            .filter(|node| matches!(node, MultiNodes::ChainTx(_)))
-            .count();
-        let chain_node_count = ulti_list
-            .iter()
-            .filter(|node| matches!(node, MultiNodes::Chain(_)))
-            .count();
-        let action_node_count = ulti_list
-            .iter()
-            .filter(|node| matches!(node, MultiNodes::Action(_)))
-            .count();
-        let webhook_node_count = ulti_list
-            .iter()
-            .filter(|node| matches!(node, MultiNodes::Webhook(_)))
-            .count();
-        let unknown = ulti_list
-            .iter()
-            .filter(|node| matches!(node, MultiNodes::Unknown))
-            .count();
+                _ => {
+                    println!("other node");
+                }
+            }
+            // println!("Node is: {:?}", node);
+        }
+        println!("websockets");
+        let uuid: String = "885d929c-2016-46ed-bb11-9ee59f784b12".to_string();
+        //      let latest_data = latest_webhookevents(uuid).await.unwrap();
+        //       println!("Latest data got back: {:?}", latest_data);
+        println!("Webhook loot data: {:?}", webhook_loot);
+        println!("end of websocket tests");
+        Ok(())
+    }
 
-        println!("http_node_count: {}", http_node_count);
-        println!("chain_node_count: {}", chain_node_count);
-        println!("action_node_count: {}", action_node_count);
-        println!("webhook_node_count: {}", webhook_node_count);
-        println!("Chaintx: {}", chain_tx_count);
-        println!("unknown: {}", unknown);
+    #[actix_rt::test]
+    async fn test_mulit_type_node() -> Result<(), anyhow::Error> {
+        /*
+                println!("Starting test_mulit_type_node");
+                let db_h = DBhandler::new();
+                //   let db = db_h.read_db()?;
 
-        println!("chain_q_count: {}", chain_q_count);
+                let multi_scenario_id: String = "PLojHUPSl".to_string();
 
-        println!("decoded okay");
-        // parse scenario
-        println!("parsing scenario_information");
+                let out = db_h.get_entry(multi_scenario_id).unwrap();
+                let decoded = decompress_string(out)
+                    .await
+                    .expect("Failed to decompress string, invalid value");
+                println!("decoded ok");
+             //   println!("Decoded as: {}", decoded);
+                // Decoded diagram data json
+                let graph_result: SerdeResult<Graph> = serde_json::from_str(decoded.as_str());
 
-        //   let output_string =
-        //     scenario_information(graph.clone()).expect("could not parse scenario");
+                let g2: Graph2 = convert_to_multinode(graph_result.expect("could not parse graph"));
+                let ulti_list = g2.nodes;
 
+                println!("Amount in loot: {}", ulti_list.len());
+                let http_node_count = ulti_list
+                    .iter()
+                    .filter(|node| matches!(node, MultiNodes::Http(_)))
+                    .count();
+                let chain_q_count = ulti_list
+                    .iter()
+                    .filter(|node| matches!(node, MultiNodes::ChainQuery(_)))
+                    .count();
+                let chain_tx_count = ulti_list
+                    .iter()
+                    .filter(|node| matches!(node, MultiNodes::ChainTx(_)))
+                    .count();
+                let chain_node_count = ulti_list
+                    .iter()
+                    .filter(|node| matches!(node, MultiNodes::Chain(_)))
+                    .count();
+                let action_node_count = ulti_list
+                    .iter()
+                    .filter(|node| matches!(node, MultiNodes::Action(_)))
+                    .count();
+                let webhook_node_count = ulti_list
+                    .iter()
+                    .filter(|node| matches!(node, MultiNodes::Webhook(_)))
+                    .count();
+                let unknown = ulti_list
+                    .iter()
+                    .filter(|node| matches!(node, MultiNodes::Unknown))
+                    .count();
+
+                println!("http_node_count: {}", http_node_count);
+                println!("chain_node_count: {}", chain_node_count);
+                println!("action_node_count: {}", action_node_count);
+                println!("webhook_node_count: {}", webhook_node_count);
+                println!("Chaintx: {}", chain_tx_count);
+                println!("unknown: {}", unknown);
+
+                println!("chain_q_count: {}", chain_q_count);
+
+                println!("decoded okay");
+                // parse scenario
+                println!("parsing scenario_information");
+
+                //   let output_string =
+                //     scenario_information(graph.clone()).expect("could not parse scenario");
+        */
         return Ok(());
     }
 

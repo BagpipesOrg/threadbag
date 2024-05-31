@@ -1,16 +1,19 @@
 use crate::chains::chains::{chain_info, get_token_decimals_by_chain_name};
 use crate::database::db::{DBhandler, Loghandler};
-use crate::database::decode::decompress_string;
+//use crate::database::decode::decompress_string;
 use crate::error::Error;
 use crate::jobs::types::Command;
 use crate::scenarios::scenario_parse::convert_to_multinode;
-use crate::scenarios::scenario_parse::multi_scenario_info;
+//use crate::scenarios::scenario_parse::multi_scenario_info;
 use crate::scenarios::scenario_parse::verify_scenario_id;
-use crate::scenarios::scenario_types::ScenarioSummary;
+//use crate::scenarios::scenario_types::ScenarioSummary;
+use crate::scenarios::pill_parse::process_node;
 use crate::scenarios::scenario_types::{Graph, Graph2, MultiNodes};
+use crate::scenarios::websockets::latest_webhookevents;
 use crate::tx_format::lazy_gen::{
     generate_tx, generic_tx_gen, getwebhook_data, hydra_swaps, query_chain, system_remark,
 };
+use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::string;
 use std::sync::{Arc, Mutex};
@@ -69,6 +72,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
     println!("scenario data extracted ");
     loop {
         let o3 = g2.clone();
+        let mut webhook_loot: HashMap<String, JsonValue> = HashMap::new();
 
         println!("----------Start---------------");
         for action_node in o3.nodes {
@@ -148,19 +152,22 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                             .unwrap_or(return Err(Error::CouldNotFindWebhookData)),
                         _ => return Err(Error::CouldNotFindWebhookData),
                     };
+                    let latest_data: HashMap<String, JsonValue> = latest_webhookevents(uid)
+                        .await
+                        .unwrap_or(return Err(Error::CantFetchWebhook));
+                    let upi = format!("Latest data got back from uuid: {:?}", latest_data);
+                    println!("{}", upi);
+                    log_db.insert_logs(
+                        scenario_id.clone(),
+                        "Got webhook data from the api: ".to_string(),
+                    )?;
+                    log_db.insert_logs(scenario_id.clone(), upi)?;
+                    webhook_loot.extend(latest_data);
                     log_db
                         .insert_logs(scenario_id.clone(), "Building webhook request".to_string())?;
                     let msg = format!("uuid for webhook is: {}", uid);
                     log_db.insert_logs(scenario_id.clone(), msg)?;
 
-                    println!("Getting webhook data");
-
-                    let loot = getwebhook_data(uid).await?;
-                    log_db.insert_logs(
-                        scenario_id.clone(),
-                        "Got webhook data from the api: ".to_string(),
-                    )?;
-                    log_db.insert_logs(scenario_id.clone(), loot.to_string())?;
                     log_db.insert_logs(
                         scenario_id.clone(),
                         "Webhook finished, moving on ".to_string(),
@@ -401,17 +408,18 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         "Building ChainNode request".to_string(),
                     )?;
                 }
-                MultiNodes::Webhook(chain_node) => {
-                    println!("Webhook node: {:?}", chain_node);
-                    log_db
-                        .insert_logs(scenario_id.clone(), "Building webhook request".to_string())?;
-                }
                 MultiNodes::Http(chain_node) => {
-                    let url = chain_node.clone().formData.expect("").url;
-                    let method = chain_node.clone().formData.expect("").method;
+                    log_db
+                        .insert_logs(scenario_id.clone(), "scanning for pill nodes".to_string())?;
+                    let mut node_copy = chain_node.clone();
+                    let _ = process_node(&mut node_copy, &webhook_loot);
+                    let url = node_copy.clone().formData.expect("").url;
+                    let method = node_copy.clone().formData.expect("").method;
+                    log_db.insert_logs(scenario_id.clone(), "pill node scan done".to_string())?;
+
                     println!("HTTP Node Method: {}", method);
                     println!("HTTP Node url: {}", url);
-                    println!("Http node: {:?}", chain_node);
+                    println!("Http node: {:?}", node_copy);
                     let req_fmt = format!("Making http request: Url: {} Method: {}", url, method);
                     log_db.insert_logs(scenario_id.clone(), req_fmt)?;
                     log_db.insert_logs(scenario_id.clone(), "Building http request".to_string())?;
