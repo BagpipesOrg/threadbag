@@ -17,6 +17,12 @@ pub enum Error {
     /// Subxt could not draft tx error
     SubxtError(subxt::Error),
 
+    /// Could not extract data from pill node
+    PillDataError,
+
+    /// Can not fetch webhook data
+    CantFetchWebhook,
+
     /// Error parsing scenario
     ScenarioParseError,
 

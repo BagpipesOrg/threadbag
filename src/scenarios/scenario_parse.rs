@@ -54,7 +54,7 @@ pub fn convert_to_multinode(scenario_data: Graph) -> Graph2 {
             }
             "http" => {
                 let formdata = node.formData.expect("could not find formdata");
-                //            println!("Formdata: {:?}", formdata);
+                //     println!("http Formdata: {:?}", formdata);
                 let http_node: HTTPNode = HTTPNode {
                     id: node.id,
                     node_type: "http".to_string(),
