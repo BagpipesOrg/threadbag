@@ -6,13 +6,16 @@ mod tests {
     // use crate::scenarios::scenario_types::ScenarioSummary;
     //use crate::scenarios::scenario_types::TxType;
     use crate::scenarios::pill_parse::extract_pill;
-    use crate::scenarios::pill_parse::process_node;
+    use crate::scenarios::pill_parse::{process_chain_node, process_node};
     use crate::scenarios::scenario_types::{
         ChainNode, Edge, Graph, HTTPNode, MaNodes, HTTP_NODE_FORMDATA,
     };
     use crate::scenarios::scenario_types::{Graph2, MultiNodes};
     use crate::scenarios::websockets::latest_webhookevents;
-    use crate::{database::db::DBhandler, tx_format::lazy_gen::generate_tx};
+    use crate::{
+        database::db::DBhandler,
+        tx_format::lazy_gen::{generate_tx, query_chain},
+    };
     use serde::{Deserialize, Serialize};
     use serde_json::{Result as SerdeResult, Value};
     use std::collections::{HashMap, HashSet};
@@ -36,16 +39,13 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_websocks() -> Result<(), anyhow::Error> {
-        let multi_scenario_id: String = "@CvAej5pE".to_string();
+        let multi_scenario_id: String = "qSxt94jqC".to_string();
         let db_h = DBhandler::new();
-        let out = db_h.get_entry(multi_scenario_id).unwrap();
-        let decoded = decompress_string(out)
-            .await
-            .expect("Failed to decompress string, invalid value");
+        println!("donwloading scenario data");
+        let out = db_h.get_remote_entry(multi_scenario_id).await.unwrap();
+        println!("donwloaded scenario data");
 
-        let graph_result: SerdeResult<Graph> = serde_json::from_str(decoded.as_str());
-
-        let g2: Graph2 = convert_to_multinode(graph_result.expect("could not parse graph"));
+        let g2: Graph2 = convert_to_multinode(out);
         let ulti_list = g2.nodes;
         let mut webhook_loot: HashMap<String, Value> = HashMap::new();
         for node in ulti_list {
@@ -66,6 +66,22 @@ mod tests {
                     println!("New node: {:?}", node_copy);
                     // let url_test_data = node.formData.unwrap().url;
                     //  println!("Extracted url data: {:?}", url_test_data);
+                }
+
+                MultiNodes::ChainQuery(chainnode) => {
+                    println!("ChainQuery node");
+                    println!("pre query node: {:?}", chainnode);
+                    let mut node_copy = chainnode.clone();
+                    let _ = process_chain_node(&mut node_copy, &webhook_loot);
+                    println!("Proccessed chain query node: {:?}", node_copy);
+                    let fm = node_copy.formData.unwrap();
+                    let local_chain = fm.selectedChain.unwrap();
+                    let pallet_name = fm.selectedPallet.unwrap();
+                    let method_name = fm.selectedMethod.unwrap().name.unwrap();
+                    let inputen = fm.methodInput.unwrap();
+                    let tx_gen = query_chain(local_chain, pallet_name, method_name, inputen).await.unwrap();
+                    println!("Txgen: {:?}", tx_gen);
+                  //  let output = query_chain(chain, ).await;
                 }
 
                 _ => {

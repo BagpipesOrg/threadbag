@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::scenarios::scenario_types::{HTTPNode, HTTP_NODE_FORMDATA};
+use crate::scenarios::scenario_types::{ChainNode, FormData, HTTPNode, HTTP_NODE_FORMDATA};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -17,10 +17,22 @@ pub fn process_node(node: &mut HTTPNode, webhook_loot: &HashMap<String, Value>) 
     }
 }
 
-pub fn process_http_form_data(
-    form_data: &mut HTTP_NODE_FORMDATA,
-    webhook_loot: &HashMap<String, Value>,
-) {
+pub fn process_chain_node(node: &mut ChainNode, webhook_loot: &HashMap<String, Value>) {
+    if let Some(form_data) = &mut node.formData {
+        process_form_data(form_data, webhook_loot);
+    }
+}
+
+pub fn process_form_data(form_data: &mut FormData, webhook_loot: &HashMap<String, Value>) {
+    process_field(&mut form_data.chain, webhook_loot);
+    //  process_field(&mut form_data.asset, webhook_loot);
+    process_field(&mut form_data.methodInput, webhook_loot);
+    process_field(&mut form_data.address, webhook_loot);
+    process_field(&mut form_data.amount, webhook_loot);
+    //process_field(&mut form_data.delay, webhook_loot);
+    //process_field(&mut form_data.contact, webhook_loot);
+    //process_field(&mut form_data.action, webhook_loot);
+    //   process_field(&mut form_data.actionData, webhook_loot);
     process_field(&mut form_data.serializeUrl, webhook_loot);
     process_field(&mut form_data.parseResponse, webhook_loot);
     process_field(&mut form_data.shareCookies, webhook_loot);
@@ -32,7 +44,72 @@ pub fn process_http_form_data(
     process_field(&mut form_data.evaluateErrors, webhook_loot);
     process_field(&mut form_data.url, webhook_loot);
     process_field(&mut form_data.method, webhook_loot);
+    process_field(&mut form_data.selectedChain, webhook_loot);
+    process_field(&mut form_data.selectedPallet, webhook_loot);
     process_field(&mut form_data.connectionType, webhook_loot);
+    process_field(&mut form_data.uuid, webhook_loot);
+    process_field(&mut form_data.webhookName, webhook_loot);
+    //  process_field(&mut form_data.params.as_mut().map(|params| &mut params["param_key"]), webhook_loot); // Adjust logic for HashMap processing if necessary
+    process_field(&mut form_data.name, webhook_loot);
+}
+
+//fn process_asset_field(field: &mut Option<As>) {}
+
+fn process_field(field: &mut Option<String>, webhook_loot: &HashMap<String, Value>) {
+    if let Some(field_value) = field.as_ref() {
+        match extract_pill(field_value.to_owned()) {
+            Ok(value) => {
+                if let Some(Value::String(converted_value)) = webhook_loot.get(&value) {
+                    *field = Some(converted_value.clone());
+                } else {
+                    println!("Could not get pill value");
+                }
+            }
+            Err(_) => {
+    //        println!("No HTML content found in field");
+            }
+        }
+    }
+
+    if let Some(value) = field.as_mut() {
+        if let Some(replacement) = webhook_loot.get(value) {
+            *value = replacement.as_str().unwrap_or(value).to_string();
+        }
+    }
+}
+fn process_field_simple(field: &mut String, webhook_loot: &HashMap<String, Value>) {
+    match extract_pill(field.to_string()) {
+        Ok(value) => {
+            //  println!("Extracted pill as: {}", value);
+            if let Some(Value::String(converted_value)) = webhook_loot.get(&value) {
+                //     println!("Converted value to: {:?}", converted_value);
+                *field = converted_value.clone();
+            } else {
+                //       println!("Could not get pill value");
+            }
+        }
+        Err(_) => {
+            //     println!("No HTML content found in field");
+        }
+    }
+}
+
+pub fn process_http_form_data(
+    form_data: &mut HTTP_NODE_FORMDATA,
+    webhook_loot: &HashMap<String, Value>,
+) {
+    process_field_simple(&mut form_data.serializeUrl, webhook_loot);
+    process_field_simple(&mut form_data.parseResponse, webhook_loot);
+    process_field_simple(&mut form_data.shareCookies, webhook_loot);
+    process_field_simple(&mut form_data.rejectUnverifiedCertificates, webhook_loot);
+    process_field_simple(&mut form_data.followRedirects, webhook_loot);
+    process_field_simple(&mut form_data.followAllRedirects, webhook_loot);
+    process_field_simple(&mut form_data.requestCompressedContent, webhook_loot);
+    process_field_simple(&mut form_data.useMutualTLS, webhook_loot);
+    process_field_simple(&mut form_data.evaluateErrors, webhook_loot);
+    process_field_simple(&mut form_data.url, webhook_loot);
+    process_field_simple(&mut form_data.method, webhook_loot);
+    process_field_simple(&mut form_data.connectionType, webhook_loot);
 }
 
 /// regex out the column name, error if not found
@@ -51,6 +128,7 @@ pub fn extract_pill(input: String) -> Result<String, Error> {
     }
 }
 
+/*
 // one field
 fn process_field(field: &mut String, webhook_loot: &HashMap<String, Value>) {
     match extract_pill(field.to_string()) {
@@ -68,6 +146,7 @@ fn process_field(field: &mut String, webhook_loot: &HashMap<String, Value>) {
         }
     }
 }
+*/
 
 impl PillParse {
     pub fn new(input: String) -> Self {

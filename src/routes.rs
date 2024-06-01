@@ -82,6 +82,37 @@ pub async fn xcm_asset_transfer() -> HttpResponse {
     HttpResponse::Ok().body("Todo!")
 }
 
+/// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWg"}' http://localhost:8081/job/stop -v
+/// wanted input:  {         
+///    pub id: String,        
+///}        
+/// stop
+#[post("/job/stop")]
+pub async fn stop_job(
+    data: web::Json<ScenarioInfo>, // job_start
+    datan: web::Data<Arc<ThreadManager>>,
+    tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
+    db: web::Data<DBhandler>,
+) -> web::Json<GenericOut> {
+    println!("job_start called");
+    let my_data: ScenarioInfo = data.into_inner();
+    println!("data collected");
+    let scenario_id = my_data.id;
+    println!("start_job id: {:?}", scenario_id);
+    // let my_delay = my_data.delay;
+    // validate input
+
+    let thread_info = datan.stop_thread(&scenario_id);
+
+    // send job start command
+    println!("route job sending start command");
+
+    return web::Json(GenericOut {
+        success: true,
+        result: "Job stopped".to_string(),
+    });
+}
+
 /// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWg"}' http://localhost:8081/job/start -v
 /// wanted input:  {         
 ///    pub scenario_id: String,        
