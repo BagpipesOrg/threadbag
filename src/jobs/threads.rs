@@ -1,21 +1,22 @@
-use std::time::Duration;
-use tokio::time::sleep;
-//use tokio_util::task::TaskTracker;
+use serde::Serialize;
 use std::sync::{Arc, Mutex};
+use tokio::sync::watch;
 
-use serde::{Deserialize, Serialize};
-
-// keep track of the threads named with the scenarioid
+// ThreadManager struct definition
 pub struct ThreadManager {
     active_threads: Arc<Mutex<Vec<ThreadInfo>>>,
 }
 
+// ThreadInfo struct definition
 #[derive(Debug, Clone, Serialize)]
 pub struct ThreadInfo {
     name: String,
     latest_status: thread_status,
+    #[serde(skip)]
+    shutdown_tx: Option<watch::Sender<()>>,
 }
 
+// Thread status enum definition
 #[derive(Debug, Clone, Serialize, Copy)]
 pub enum thread_status {
     Running,
@@ -31,35 +32,41 @@ impl ThreadManager {
         }
     }
 
-    /// spawn new thread   
+    /// Spawn a new thread
     pub fn spawn<T>(&self, name: String, future: T)
     where
         T: std::future::Future<Output = ()> + Send + 'static,
     {
+        let (shutdown_tx, mut shutdown_rx) = watch::channel(());
+
         let thread_info = ThreadInfo {
-            name: name.to_string(),
+            name: name.clone(),
             latest_status: thread_status::Running,
+            shutdown_tx: Some(shutdown_tx),
         };
 
-        // Add the thread name to the active threads list.
-
         let mut active_threads = self.active_threads.lock().unwrap();
-        active_threads.push(thread_info);
+        active_threads.push(thread_info.clone());
 
         let active_threads_clone = Arc::clone(&self.active_threads);
 
         tokio::spawn(async move {
-            let result = future.await;
+            tokio::select! {
+                _ = future => {},
+                _ = shutdown_rx.changed() => {
+                    // Handle the shutdown signal
+                },
+            }
 
-            // Remove the thread name from the active threads list.
+            // Update the thread status to Stopped
             let mut active_threads = active_threads_clone.lock().unwrap();
-            active_threads.retain(|t| t.name != name);
-
-            result
+            if let Some(thread) = active_threads.iter_mut().find(|t| t.name == name) {
+                thread.latest_status = thread_status::Stopped;
+            }
         });
     }
 
-    /// get a single threads statuss
+    /// Get a single thread's status
     pub fn get_thread_status(&self, thread_name: String) -> thread_status {
         let listan = self.get_active_threads();
         for item in listan.iter() {
@@ -70,8 +77,21 @@ impl ThreadManager {
         return thread_status::NotFound;
     }
 
-    // get all running threads
+    /// Get all running threads
     pub fn get_active_threads(&self) -> Vec<ThreadInfo> {
         self.active_threads.lock().unwrap().clone()
+    }
+
+    /// Stop a thread
+    pub fn stop_thread(&self, thread_name: &str) -> thread_status {
+        let mut active_threads = self.active_threads.lock().unwrap();
+        if let Some(thread) = active_threads.iter_mut().find(|t| t.name == thread_name) {
+            if let Some(shutdown_tx) = &thread.shutdown_tx {
+                let _ = shutdown_tx.send(());
+                thread.latest_status = thread_status::Stopped;
+                return thread_status::Stopped;
+            }
+        }
+        thread_status::NotFound
     }
 }

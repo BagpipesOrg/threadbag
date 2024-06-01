@@ -27,7 +27,7 @@ use jobs::types::{Command, ThreadInfo};
 mod routes;
 use routes::{
     broadcast_tx, dot_openchannels, get_logs, get_url, info, list_single_thread, save_url,
-    scenario_info, scenario_transactions, start_job, xcm_asset_transfer,
+    scenario_info, scenario_transactions, start_job, stop_job, xcm_asset_transfer,
 };
 
 // cors settings to allow any origin
@@ -87,6 +87,7 @@ async fn main() -> std::io::Result<()> {
                 .service(scenario_transactions) // mempool
                 .service(start_job)
                 .service(info)
+                .service(stop_job)
                 .service(list_single_thread)
         })
         .bind(("127.0.0.1", 8081))

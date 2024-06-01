@@ -3,6 +3,7 @@ use crate::database::db::{DBhandler, Loghandler};
 //use crate::database::decode::decompress_string;
 use crate::error::Error;
 use crate::jobs::types::Command;
+use crate::scenarios::pill_parse::process_chain_node;
 use crate::scenarios::scenario_parse::convert_to_multinode;
 //use crate::scenarios::scenario_parse::multi_scenario_info;
 use crate::scenarios::scenario_parse::verify_scenario_id;
@@ -32,36 +33,50 @@ fn hex_to_vec_u8(hex: &str) -> Vec<u8> {
 /// Start a job worker for scenario_id and sleep for X(delay) amount of hours
 pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Error> {
     // sanitize input | todo better verify function
+    let log_db = Loghandler::new();
     match verify_scenario_id(scenario_id.clone()) {
         true => {
             println!("valid scenario id");
         } // if its true do nothing and assume its a correct string0
         _ => {
             println!("invalid scenario id: {:?}", scenario_id);
+            log_db.insert_logs(scenario_id.clone(), "invalid scenario id".to_string())?;
+
             return Err(Error::ScenarioIdNotFound);
         }
     };
 
     println!("Starting job worker");
     let db_fluff = DBhandler::new();
-    let log_db = Loghandler::new();
+
     println!("Decoding data");
     log_db.insert_logs(scenario_id.clone(), "Starting worker".to_string())?;
     log_db.insert_logs(scenario_id.clone(), "Decoding payload..".to_string())?;
     println!("decoding graph...");
-    let graph: Graph = match db_fluff.get_decoded_entry(scenario_id.clone()).await {
+    let graph: Graph = match db_fluff.get_remote_entry(scenario_id.clone()).await {
         Ok(value) => value,
         Err(error) => {
             println!("Error error: {:?}", error);
+            log_db.insert_logs(scenario_id.clone(), "Invalid scenario id".to_string())?;
+
             return Err(Error::ScenarioIdNotFound);
         }
 
         _ => {
             println!("got some type of error in the graph");
+            log_db.insert_logs(
+                scenario_id.clone(),
+                "Could not parse the scenario data".to_string(),
+            )?;
+
             return Err(Error::ScenarioIdNotFound);
         }
     };
     println!("Convert graph to graph2");
+    log_db.insert_logs(
+        scenario_id.clone(),
+        "downloaded scenario data from api".to_string(),
+    )?;
 
     let g2: Graph2 = convert_to_multinode(graph);
     println!("work thread was able to decode data to Graph");
@@ -78,7 +93,9 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
         for action_node in o3.nodes {
             println!("looping at action node: {:?}", action_node);
             match action_node.clone() {
-                MultiNodes::ChainTx(chain_node) => {
+                MultiNodes::ChainTx(chainnode) => {
+                    let mut chain_node = chainnode.clone();
+                    let _ = process_chain_node(&mut chain_node, &webhook_loot);
                     log_db.insert_logs(scenario_id.clone(), "ChainTx Node detected".to_string())?;
                     let formdatan = chain_node.formData;
                     let mut local_chain: String = "test".to_string();
@@ -90,7 +107,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         Some(entry) => {
                             local_chain = entry.selectedChain.unwrap();
                             pallet_name = entry.selectedPallet.unwrap();
-                            method_name = entry.selectedMethod.unwrap().name;
+                            method_name = entry.selectedMethod.unwrap().name.unwrap();
                             for (key, value) in entry.params.unwrap().iter() {
                                 let vec_u8 = hex_to_vec_u8(value);
                                 params = vec_u8;
@@ -105,7 +122,14 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                     )?;
 
                     let tx_gen =
-                        generic_tx_gen(local_chain, pallet_name, method_name, params).await;
+                        generic_tx_gen(local_chain.clone(), pallet_name, method_name, params).await?;
+                        log_db.insert_tx(
+                            scenario_id.clone(),
+                            '0'.to_string(),
+                            local_chain,
+                            "ChainTx".to_string(),
+                            tx_gen.result.to_string(),
+                        )?;
                     log_db.insert_logs(
                         scenario_id.clone(),
                         "ChainTx Response was recieved".to_string(),
@@ -113,21 +137,26 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
 
                     println!("chaintx detected!!!!!!!!!");
                 }
-                MultiNodes::ChainQuery(chain_node) => {
+                MultiNodes::ChainQuery(chainqnode) => {
+                    println!("chainquery");
                     log_db
                         .insert_logs(scenario_id.clone(), "ChainQuery Node detected".to_string())?;
+
+                    let mut chain_node = chainqnode.clone();
+                    let _ = process_chain_node(&mut chain_node, &webhook_loot);
                     let formdatan = chain_node.formData;
 
                     let mut local_chain: String = "test".to_string();
                     let mut pallet_name: String = "test".to_string();
                     let mut method_name: String = "test".to_string();
-                    let mut params: Vec<u8> = Vec::new(); //params todo
+                    let mut params: String = "test".to_string(); //params todo
 
                     match formdatan {
                         Some(entry) => {
                             local_chain = entry.selectedChain.unwrap();
                             pallet_name = entry.selectedPallet.unwrap();
-                            method_name = entry.selectedMethod.unwrap().name;
+                            method_name = entry.selectedMethod.unwrap().name.unwrap();
+                            params = entry.methodInput.unwrap();
                         }
                         _ => return Err(Error::InvalidChainOption),
                     };
@@ -135,7 +164,14 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         scenario_id.clone(),
                         "ChainQuery Node Request built".to_string(),
                     )?;
-                    let tx_gen = query_chain(local_chain, pallet_name, method_name, params).await;
+                    let tx_gen = query_chain(local_chain.clone(), pallet_name, method_name, params).await?;
+                    log_db.insert_tx(
+                        scenario_id.clone(),
+                        '0'.to_string(),
+                        local_chain,
+                        "ChainQuery".to_string(),
+                        tx_gen.result.to_string(),
+                    )?;
                     log_db.insert_logs(
                         scenario_id.clone(),
                         "ChainQuery got response back".to_string(),
@@ -146,15 +182,20 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
 
                 MultiNodes::Webhook(webhooknode) => {
                     println!("Webhook node!");
+
                     let uid = match webhooknode.formData {
-                        Some(value) => value
-                            .uuid
-                            .unwrap_or(return Err(Error::CouldNotFindWebhookData)),
-                        _ => return Err(Error::CouldNotFindWebhookData),
+                        Some(value) => value.uuid.unwrap(),
+                            //.unwrap_or(return Err(Error::CouldNotFindWebhookData)),
+                        _ => {
+                            println!("some error");
+                            return Err(Error::CouldNotFindWebhookData);
+                            
+                        },
                     };
-                    let latest_data: HashMap<String, JsonValue> = latest_webhookevents(uid)
+                    println!("got uiid");
+                    let latest_data: HashMap<String, JsonValue> = latest_webhookevents(uid.clone())
                         .await
-                        .unwrap_or(return Err(Error::CantFetchWebhook));
+                        .unwrap_or(HashMap::new());
                     let upi = format!("Latest data got back from uuid: {:?}", latest_data);
                     println!("{}", upi);
                     log_db.insert_logs(
@@ -173,7 +214,9 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         "Webhook finished, moving on ".to_string(),
                     )?;
                 }
-                MultiNodes::Action(chain_node) => {
+                MultiNodes::Action(chainnode) => {
+                    let mut chain_node = chainnode.clone();
+                    let _ = process_chain_node(&mut chain_node, &webhook_loot);
                     println!("action node detected");
                     let form_me = chain_node.clone().formData.expect("");
                     println!("form_me is; {:?}", form_me);
@@ -223,7 +266,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                                 0.to_string(),
                                 s_chain,
                                 "Remark".to_string(),
-                                remark_tx.clone(),
+                                remark_tx.to_string().clone(),
                             )?;
                             println!("generated the following remark tx: {:?}", remark_tx);
                             println!("inserting logs");

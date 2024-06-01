@@ -1,3 +1,4 @@
+use crate::database::types::GetUrlResponse;
 use crate::error::Error;
 use reqwest;
 use reqwest::Client;
@@ -35,6 +36,16 @@ pub struct GenTxGen {
     params: Vec<u8>,
 }
 
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GenQueryGen {
+    chain: String,
+    pallet_name: String,
+    method_name: String,
+    params: String,//Vec<u8>,
+}
+
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SwapResponse {
     pub success: bool,
@@ -49,7 +60,7 @@ pub struct swap_datan {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct generic_result {
-    pub result: String,
+    pub result: SerdeValue,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -108,6 +119,27 @@ pub async fn generate_tx(
     println!("Response body: {:?}", body);
 
     Ok(body)
+}
+
+// download scenario data from api
+pub async fn download_scenario_data(scenario_id: String) -> Result<String, Error> {
+    let url = format!("{}/api/template/getUrl/{}", get_api_url(), scenario_id);
+
+    let response = reqwest::get(&url).await?;
+
+    if response.status().is_success() {
+        let response_data: GetUrlResponse = response.json().await?;
+        println!("got response data: {:?}", response_data);
+        let long_url = response_data.longUrl;
+        println!("geturl longurl: {}", long_url);
+        return Ok(long_url);
+    } else {
+        let error_message = response.text().await?;
+        eprintln!("Error getting URL: {}", error_message);
+        return Err(Error::NoEntryInDb);
+    }
+
+    return Err(Error::NoEntryInDb);
 }
 
 // curl -X POST -H "Content-Type: application/json" -d '{"chain": "polkadot", "msg": "hack the planet"}' http://localhost:8080/api/actions/system-remark    -v
@@ -190,11 +222,11 @@ pub async fn query_chain(
     chain: String,
     pallet_name: String,
     method_name: String,
-    params: Vec<u8>,
+    params: String,
 ) -> Result<generic_result, Error> {
     let client = Client::new();
 
-    let request_body: GenTxGen = GenTxGen {
+    let request_body: GenQueryGen = GenQueryGen {
         chain: chain,
         pallet_name: pallet_name,
         method_name: method_name,
@@ -202,7 +234,7 @@ pub async fn query_chain(
     };
 
     let url = format!("{}/api/actions/query", get_api_url());
-
+    println!("request_body: {:?}", request_body);
     println!("making request: {:?}", url);
     let response = client
         .post(url)
@@ -227,7 +259,7 @@ pub async fn generic_tx_gen(
     chain: String,
     pallet_name: String,
     method_name: String,
-    params: Vec<u8>,
+    params: Vec<u8>//Vec<u8>,
 ) -> Result<generic_result, Error> {
     let client = Client::new();
 

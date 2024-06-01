@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
+use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::option;
-
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Graph {
@@ -33,7 +33,7 @@ pub struct Edge {
     pub target: String,
     pub style: EdgeStyle,
     pub marker_end: Option<MarkerEnd>,
-    pub r#type: String,
+    pub r#type: Option<String>,
     pub label: String,
     pub label_show_bg: Option<bool>,
     pub label_style: Option<LabelStyle>,
@@ -212,26 +212,28 @@ pub struct FormData {
     pub connectionType: Option<String>,
     pub uuid: Option<String>,
     pub webhookName: Option<String>,
+    pub methodInput: Option<String>,
     pub params: Option<HashMap<String, String>>,
+    pub name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SelectedMethod3 {
-    pub name: String,
+    pub name: Option<String>,
     #[serde(rename = "type")]
-    pub method_type: String,
+    pub method_type: JsonValue,
     pub docs: String,
-    pub fields: Vec<MethodField3>,
-    pub index: String,
+    pub fields: Option<Vec<MethodField3>>,
+    pub index: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MethodField3 {
-    pub name: String,
+    pub name: Option<String>,
     #[serde(rename = "type")]
-    field_type: String,
-    pub typeName: String,
-    pub docs: String,
+    field_type: Option<JsonValue>,
+    pub typeName: Option<JsonValue>,
+    pub docs: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -288,7 +290,7 @@ impl From<StringOrNumber> for String {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Asset {
-    pub name: String,
+    pub name: Option<String>,
     pub assetid: Option<u32>,
     pub symbol: Option<String>,
 }

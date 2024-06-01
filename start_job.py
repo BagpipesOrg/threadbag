@@ -8,7 +8,7 @@ payload = "eJzdVtty2zYQ/Rc8SyxxI0C9xXYcN03Tie3EuUzGA5IQxYgkHJCq7Xj0712KF0mUGEcz7
 #print("Response: ")
 #print(xx.text)
 #s = xx.json()
-scenario_id = "O27VlI2Tm"#"+DN*1Cug4"#s.get('shortUrl', 'not found')
+scenario_id = "qSxt94jqC"#"+DN*1Cug4"#s.get('shortUrl', 'not found')
 #print("Scenario id saved as:", scenario_id)
 
 print("Starting job: ")
@@ -19,3 +19,17 @@ time.sleep(10)
 print("Quering logs for ", scenario_id)
 logs = requests.post(base+"/scenario/worker/logs", json={"id": scenario_id})
 print("Logs returned: ", logs.text)
+print("sleeping for 10 seconds.. ")
+time.sleep(10)
+
+## Query logs for our scenario
+print("Quering logs for: ", scenario_id)
+logs = requests.post(base+"/scenario/worker/logs", json={"id": scenario_id})
+# example output:
+#{"success":true,"result":["Starting worker","Decoding payload..","Parsed scenario data","Making http request: Url: https://example.com Method: post","Building http request","Building ChainNode request","Drafting xTransfer tx from polkadot to assetHub"]}
+print("Logs returned: ", logs.text)
+
+## Query for the transaction que 
+txmempool = requests.post(base+"/scenario/tx", json={"id": scenario_id})
+
+print("Getting transaction queue: ", txmempool.text)

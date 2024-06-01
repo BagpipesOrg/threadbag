@@ -4,6 +4,7 @@ use crate::database::types::{TxInfo, Urldata};
 use crate::error::Error as CrateError;
 use crate::scenarios::scenario_parse::generate_random_id;
 use crate::scenarios::scenario_types::Graph;
+use crate::tx_format::lazy_gen::download_scenario_data;
 use anyhow::Error;
 use bincode::{deserialize, serialize};
 use chrono::Utc;
@@ -159,6 +160,22 @@ impl DBhandler {
 
         Ok(())
     }
+    /// download scenario from api and decode it to a Graph
+    pub async fn get_remote_entry(&self, key: String) -> Result<Graph, CrateError> {
+        match download_scenario_data(key).await {
+            Ok(value) => {
+                let decoded = decompress_string(value)
+                    .await
+                    .expect("Failed to decompress string, invalid value");
+               // println!("decoded at: {}", decoded);
+                let graph: Graph =
+                    serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
+                return Ok(graph);
+            }
+            _ => return Err(CrateError::NoEntryInDb),
+        }
+    }
+
     /// query for an item and decode it to a Graph
     pub async fn get_decoded_entry(&self, key: String) -> Result<Graph, CrateError> {
         let out = self.get_entry(key)?;
