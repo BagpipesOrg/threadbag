@@ -8,7 +8,6 @@ use flate2::read::ZlibDecoder;
 //use std::error::Error;
 use std::io::Read;
 //use std::io::Write;
-use std::str;
 
 // this does not produce the same output as the .ts one, something to do with padding/encoding the original string to bytes
 /*

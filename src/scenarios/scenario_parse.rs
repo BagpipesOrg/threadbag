@@ -1,10 +1,7 @@
 use crate::error::Error;
-use crate::scenarios::scenario_types::{
-    Graph, Graph2, MultiNodes, ScenarioSummary, StringOrNumber, TxType,
-};
+use crate::scenarios::scenario_types::{Graph, Graph2, MultiNodes, ScenarioSummary, TxType};
 use crate::scenarios::scenario_types::{HTTPNode, HTTP_NODE_FORMDATA};
 use getrandom::getrandom;
-use serde::{Deserialize, Serialize};
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$*+_"; // supported charset
 const ID_LENGTH: usize = 9; // size / length
@@ -118,11 +115,11 @@ pub fn multi_scenario_info(scenario_data: Graph) -> Vec<ScenarioSummary> {
                 tx: "not set".to_string(),
             };
             //     println!("action data: {:?}", action_data);
-            let ss = "swap".to_string();
-            let xt = "xTransfer".to_string();
+            let _ss = "swap".to_string();
+            let _xt = "xTransfer".to_string();
             let right_one = match &action_data.actionType {
-                xt => TxType::xTransfer,
-                ss => TxType::swap,
+                _xt => TxType::xTransfer,
+                _ss => TxType::swap,
                 _ => TxType::unknown,
             };
             tmp_scenario.txtype = right_one;

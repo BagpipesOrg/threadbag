@@ -1,5 +1,5 @@
 use crate::scenarios::scenario_types::ScenarioSummary;
-use actix_web::{web, HttpResponse, Responder};
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]

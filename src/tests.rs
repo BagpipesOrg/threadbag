@@ -1,25 +1,23 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::database::decode::decompress_string;
-    use crate::scenarios::scenario_parse::{convert_to_multinode, scenario_information};
+
+    use crate::scenarios::scenario_parse::convert_to_multinode;
     // use crate::scenarios::scenario_types::ScenarioSummary;
     //use crate::scenarios::scenario_types::TxType;
-    use crate::scenarios::pill_parse::extract_pill;
+
     use crate::scenarios::pill_parse::{process_chain_node, process_node};
-    use crate::scenarios::scenario_types::{
-        ChainNode, Edge, Graph, HTTPNode, MaNodes, HTTP_NODE_FORMDATA,
-    };
+
     use crate::scenarios::scenario_types::{Graph2, MultiNodes};
     use crate::scenarios::websockets::latest_webhookevents;
-    use crate::{
-        database::db::DBhandler,
-        tx_format::lazy_gen::{generate_tx, query_chain},
-    };
-    use serde::{Deserialize, Serialize};
-    use serde_json::{Result as SerdeResult, Value};
-    use std::collections::{HashMap, HashSet};
-    use std::fmt::format;
+    use crate::{database::db::DBhandler, tx_format::lazy_gen::query_chain};
+
+    use crate::web_server::http::{quick_server, run_webserver, spawn_web_server};
+    use reqwest;
+    use reqwest::Client;
+    use serde_json::Value;
+    use std::collections::HashMap;
+    // use actix_rt::System;
+    //    use std::fmt::format;
     //use crate::chains::chains::{chains, get_rpc_endpoint};
     //use crate::database::db::DBhandler;
     //use crate::database::decode::decompress_string;
@@ -30,14 +28,34 @@ mod tests {
     //    use subxt::{OnlineClient, PolkadotConfig};
     //   use subxt_signer::sr25519::dev;
 
-    #[test]
-    fn it_works() {
+    #[actix_web::test]
+    async fn it_works() {
         println!("running");
         let result = 2 + 2;
         assert_eq!(result, 4);
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
+    async fn test_webserver() -> Result<(), anyhow::Error> {
+        //    let _system = System::new();
+        println!("starting server");
+        //quick_server
+        let (Server, Port) = quick_server().expect("Couldnt start http server");
+        println!("server spawned on port: {Port}");
+        let _ = tokio::spawn(Server);
+        println!("testing urls");
+
+        let url = format!("http://localhost:{}/", Port);
+
+        let response = reqwest::get(&url).await?;
+
+        assert_eq!(response.status().is_success(), true);
+        println!("test passed");
+        println!("test web server");
+        Ok(())
+    }
+
+    #[actix_web::test]
     async fn test_websocks() -> Result<(), anyhow::Error> {
         let multi_scenario_id: String = "qSxt94jqC".to_string();
         let db_h = DBhandler::new();
@@ -79,9 +97,11 @@ mod tests {
                     let pallet_name = fm.selectedPallet.unwrap();
                     let method_name = fm.selectedMethod.unwrap().name.unwrap();
                     let inputen = fm.methodInput.unwrap();
-                    let tx_gen = query_chain(local_chain, pallet_name, method_name, inputen).await.unwrap();
+                    let tx_gen = query_chain(local_chain, pallet_name, method_name, inputen)
+                        .await
+                        .unwrap();
                     println!("Txgen: {:?}", tx_gen);
-                  //  let output = query_chain(chain, ).await;
+                    //  let output = query_chain(chain, ).await;
                 }
 
                 _ => {
@@ -91,7 +111,7 @@ mod tests {
             // println!("Node is: {:?}", node);
         }
         println!("websockets");
-        let uuid: String = "885d929c-2016-46ed-bb11-9ee59f784b12".to_string();
+        let _uuid: String = "885d929c-2016-46ed-bb11-9ee59f784b12".to_string();
         //      let latest_data = latest_webhookevents(uuid).await.unwrap();
         //       println!("Latest data got back: {:?}", latest_data);
         println!("Webhook loot data: {:?}", webhook_loot);
@@ -99,7 +119,7 @@ mod tests {
         Ok(())
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_mulit_type_node() -> Result<(), anyhow::Error> {
         /*
                 println!("Starting test_mulit_type_node");

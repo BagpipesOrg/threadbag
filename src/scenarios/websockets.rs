@@ -19,7 +19,7 @@ pub async fn latest_webhookevents(uuid: String) -> Result<HashMap<String, JsonVa
         .send()
         .await?;
 
-    let status = response.status();
+    let _status = response.status();
     let body = response.json::<HashMap<String, JsonValue>>().await?;
     Ok(body)
 }

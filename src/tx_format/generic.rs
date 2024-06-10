@@ -1,9 +1,4 @@
 // generic subxt lib
-use crate::chains::chains::{chains, get_rpc_endpoint};
-use subxt::{
-    config::{Config, DefaultExtrinsicParams, PolkadotConfig},
-    OnlineClient, SubstrateConfig,
-};
 
 /*
 
