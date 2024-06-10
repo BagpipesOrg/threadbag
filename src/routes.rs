@@ -2,14 +2,14 @@
 use crate::database::db::{DBhandler, Loghandler};
 use crate::database::decode::decompress_string;
 use crate::database::types::{
-    job_start, BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, LogsOut, ScenarioInfo,
+    BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, LogsOut, ScenarioInfo,
     ScenarioInfoOut, TxInfo, TxQueue, UrlResponse, Urldata,
 };
 use crate::jobs::threads::{thread_status, ThreadManager}; // ThreadInfo
 use crate::scenarios::scenario_parse::{multi_scenario_info, scenario_information};
 use crate::scenarios::scenario_types::{Graph, ScenarioSummary};
 use crate::Command;
-use actix_web::{get, post, web, HttpResponse, Result};
+use actix_web::{get, post, web, HttpResponse};
 use std::sync::Arc;
 
 #[get("/")]
@@ -25,7 +25,7 @@ pub async fn dot_openchannels() -> HttpResponse {
 
 // broadcast input: {chain: 'hydradx', tx: ''}
 #[post("/broadcast")]
-pub async fn broadcast_tx(data: web::Json<BroadcastInput>) -> web::Json<BroadcastStatus> {
+pub async fn broadcast_tx(_data: web::Json<BroadcastInput>) -> web::Json<BroadcastStatus> {
     web::Json(BroadcastStatus {
         status: "fail".to_string(),
         hash: "not found".to_string(),
@@ -65,7 +65,7 @@ pub async fn get_url(
             });
             // return HttpResponse::Ok().body("Found entry!");
         }
-        Err(err) => web::Json(GetUrlResponse {
+        Err(_err) => web::Json(GetUrlResponse {
             success: false,
             longUrl: "not found".to_string(),
         }),
@@ -91,8 +91,8 @@ pub async fn xcm_asset_transfer() -> HttpResponse {
 pub async fn stop_job(
     data: web::Json<ScenarioInfo>, // job_start
     datan: web::Data<Arc<ThreadManager>>,
-    tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
-    db: web::Data<DBhandler>,
+    _tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
+    _db: web::Data<DBhandler>,
 ) -> web::Json<GenericOut> {
     println!("job_start called");
     let my_data: ScenarioInfo = data.into_inner();
@@ -102,7 +102,7 @@ pub async fn stop_job(
     // let my_delay = my_data.delay;
     // validate input
 
-    let thread_info = datan.stop_thread(&scenario_id);
+    let _thread_info = datan.stop_thread(&scenario_id);
 
     // send job start command
     println!("route job sending start command");
@@ -123,7 +123,7 @@ pub async fn stop_job(
 pub async fn start_job(
     data: web::Json<ScenarioInfo>, // job_start
     tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
-    db: web::Data<DBhandler>,
+    _db: web::Data<DBhandler>,
 ) -> web::Json<GenericOut> {
     println!("job_start called");
     let my_data: ScenarioInfo = data.into_inner();
@@ -194,7 +194,7 @@ pub async fn scenario_info(
             println!("decoded okay");
             // parse scenario
             println!("parsing scenario_information");
-            let output_string =
+            let _output_string =
                 scenario_information(graph.clone()).expect("could not parse scenario");
             println!("parsing scenario_information ok");
             println!("parsing multi_scenario_info");
@@ -206,7 +206,7 @@ pub async fn scenario_info(
                 result: Some(o2),
             });
         }
-        Err(err) => {
+        Err(_err) => {
             return web::Json(ScenarioInfoOut {
                 success: false,
                 result: None,

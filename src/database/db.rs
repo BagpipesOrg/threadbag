@@ -6,7 +6,7 @@ use crate::scenarios::scenario_parse::generate_random_id;
 use crate::scenarios::scenario_types::Graph;
 use crate::tx_format::lazy_gen::download_scenario_data;
 use anyhow::Error;
-use bincode::{deserialize, serialize};
+
 use chrono::Utc;
 use sled;
 use sled::{Db, IVec}; //IVec Tree
@@ -115,7 +115,7 @@ impl DBhandler {
     pub fn read_db(&self) -> Result<Db, Error> {
         let open: Db = sled::open("bp.db")?;
         // lets define our merging operations
-        let merge_result = open.set_merge_operator(custom_merge_operator());
+        let _merge_result = open.set_merge_operator(custom_merge_operator());
         return Ok(open);
     }
     /*
@@ -167,7 +167,7 @@ impl DBhandler {
                 let decoded = decompress_string(value)
                     .await
                     .expect("Failed to decompress string, invalid value");
-               // println!("decoded at: {}", decoded);
+                // println!("decoded at: {}", decoded);
                 let graph: Graph =
                     serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
                 return Ok(graph);

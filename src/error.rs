@@ -1,5 +1,4 @@
 // Threadbags error class, goal is to move all error handling here //flipchan
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub enum Error {

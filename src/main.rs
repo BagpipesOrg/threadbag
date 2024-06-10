@@ -1,12 +1,12 @@
 use crate::database::db::{DBhandler, Loghandler};
-use actix_rt::spawn;
-use actix_web::{get, middleware, rt::Runtime, web, App, HttpResponse, HttpServer};
+
+use actix_web::{middleware, web, App, HttpServer};
 //use tokio::time::Duration;
 //use futures::channel::mpsc;
 use actix_cors::Cors;
 use tokio::sync::mpsc; // use tokio's mpsc channel
                        //use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::time::{sleep, Duration};
 
 //mod cli;
@@ -18,10 +18,11 @@ mod jobs;
 mod scenarios;
 mod tests;
 mod tx_format;
+mod web_server;
 
 use jobs::jobs::{dummy_thread, start_job_worker};
 use jobs::threads::ThreadManager;
-use jobs::types::{Command, ThreadInfo};
+use jobs::types::Command;
 
 // get the slashes
 mod routes;
@@ -119,10 +120,10 @@ async fn main() -> std::io::Result<()> {
             use Command::*;
 
             match cmd {
-                Status { scenario_id } => {
+                Status { scenario_id: _ } => {
                     println!("Got the status of the job");
                 }
-                Stop { scenario_id } => {
+                Stop { scenario_id: _ } => {
                     println!("Received job stop signal");
                 }
                 Start { scenario_id, delay } => {
@@ -130,7 +131,7 @@ async fn main() -> std::io::Result<()> {
                     println!("Start job called");
                     // start_job_worker start_job_worker
                     println!("Starting worker thread");
-                    let worker_thread = actix_rt::spawn(async move {
+                    let _worker_thread = actix_rt::spawn(async move {
                         start_job_worker(scenario_id, delay).await;
                     });
                     println!("worker thread");

@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
-use std::option;
+//use std::option;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Graph {
@@ -304,12 +304,12 @@ pub enum TxType {
 
 impl From<String> for TxType {
     fn from(value: String) -> TxType {
-        let swap: String = "swap".to_string();
-        let xtransfer: String = "xTransfer".to_string();
+        let _swap: String = "swap".to_string();
+        let _xtransfer: String = "xTransfer".to_string();
 
         match value {
-            xtransfer => TxType::xTransfer,
-            swap => TxType::swap,
+            _xtransfer => TxType::xTransfer,
+            _swap => TxType::swap,
             _ => TxType::unknown,
         }
     }

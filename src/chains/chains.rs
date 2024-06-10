@@ -146,7 +146,7 @@ pub fn get_token_decimals_by_chain_name(chain_name: &str) -> u64 {
     }
 }
 
-pub fn get_asset_decimals_for_chain(chain: String) {
+pub fn get_asset_decimals_for_chain(_chain: String) {
     //    match chain {
 
     //  }

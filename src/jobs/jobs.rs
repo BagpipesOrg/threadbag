@@ -1,4 +1,4 @@
-use crate::chains::chains::{chain_info, get_token_decimals_by_chain_name};
+use crate::chains::chains::get_token_decimals_by_chain_name;
 use crate::database::db::{DBhandler, Loghandler};
 //use crate::database::decode::decompress_string;
 use crate::error::Error;
@@ -12,13 +12,13 @@ use crate::scenarios::pill_parse::process_node;
 use crate::scenarios::scenario_types::{Graph, Graph2, MultiNodes};
 use crate::scenarios::websockets::latest_webhookevents;
 use crate::tx_format::lazy_gen::{
-    generate_tx, generic_tx_gen, getwebhook_data, hydra_swaps, query_chain, system_remark,
+    generate_tx, generic_tx_gen, hydra_swaps, query_chain, system_remark,
 };
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
-use std::string;
-use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc; // use tokio's mpsc channel
+//use std::string;
+use std::sync::Arc;
+// use tokio's mpsc channel
 use tokio::time::sleep;
 use tokio::time::Duration;
 
@@ -122,14 +122,15 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                     )?;
 
                     let tx_gen =
-                        generic_tx_gen(local_chain.clone(), pallet_name, method_name, params).await?;
-                        log_db.insert_tx(
-                            scenario_id.clone(),
-                            '0'.to_string(),
-                            local_chain,
-                            "ChainTx".to_string(),
-                            tx_gen.result.to_string(),
-                        )?;
+                        generic_tx_gen(local_chain.clone(), pallet_name, method_name, params)
+                            .await?;
+                    log_db.insert_tx(
+                        scenario_id.clone(),
+                        '0'.to_string(),
+                        local_chain,
+                        "ChainTx".to_string(),
+                        tx_gen.result.to_string(),
+                    )?;
                     log_db.insert_logs(
                         scenario_id.clone(),
                         "ChainTx Response was recieved".to_string(),
@@ -164,7 +165,8 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         scenario_id.clone(),
                         "ChainQuery Node Request built".to_string(),
                     )?;
-                    let tx_gen = query_chain(local_chain.clone(), pallet_name, method_name, params).await?;
+                    let tx_gen =
+                        query_chain(local_chain.clone(), pallet_name, method_name, params).await?;
                     log_db.insert_tx(
                         scenario_id.clone(),
                         '0'.to_string(),
@@ -185,12 +187,11 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
 
                     let uid = match webhooknode.formData {
                         Some(value) => value.uuid.unwrap(),
-                            //.unwrap_or(return Err(Error::CouldNotFindWebhookData)),
+                        //.unwrap_or(return Err(Error::CouldNotFindWebhookData)),
                         _ => {
                             println!("some error");
                             return Err(Error::CouldNotFindWebhookData);
-                            
-                        },
+                        }
                     };
                     println!("got uiid");
                     let latest_data: HashMap<String, JsonValue> = latest_webhookevents(uid.clone())
@@ -290,7 +291,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                                 .expect("could not get target.chain")
                                 .target
                                 .chain;
-                            let s_address = form_me
+                            let _s_address = form_me
                                 .actionData
                                 .clone()
                                 .expect("could not get source.address")
@@ -444,7 +445,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                     log_db
                         .insert_logs(scenario_id.clone(), "Building Action request".to_string())?;
                 }
-                MultiNodes::Chain(chain_node) => {
+                MultiNodes::Chain(_chain_node) => {
                     //                  println!("Chain node: {:?}", chain_node);
                     log_db.insert_logs(
                         scenario_id.clone(),

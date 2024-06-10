@@ -1,11 +1,11 @@
 // xcm transaction generation
 // todo cache the connections
-use crate::chains::chains::{chains, get_rpc_endpoint};
+use crate::chains::chains::chains;
 //use crate::tx_format::generic::{assethubpolkadotconf, polkadotconf};
 use crate::error::Error;
-use hex::FromHex;
-use subxt::{utils::AccountId32, OnlineClient, PolkadotConfig};
-use subxt_signer::sr25519::dev;
+//use hex::FromHex;
+//use subxt::{utils::AccountId32, OnlineClient, PolkadotConfig};
+//use subxt_signer::sr25519::dev;
 
 //use crate::tx_format::generic::{polkadotconf, assethubpolkadotconf, hydradxconf, interlayconf};
 //use crate::tx_format::generic::{assethubpolkadotrt, AssetHubConfig};
@@ -33,9 +33,9 @@ impl AssethubTx {
     pub async fn xcm_tx(
         &self,
         dest_chain: chains,
-        amount: u128,
-        assetid: u128,
-        dest_account: String,
+        _amount: u128,
+        _assetid: u128,
+        _dest_account: String,
     ) -> Result<(), Error> {
         //       let api =
         //          OnlineClient::<AssetHubConfig>::from_url(get_rpc_endpoint(chains::Assethub)).await?;
@@ -44,7 +44,7 @@ impl AssethubTx {
             chains::Polkadot => {}
             chains::Hydradx => {}
 
-            /// xcm v2
+            // xcm v2
             chains::Interlay => {
                 //            use assethubpolkadotrt::runtime_types::xcm::v2::junction::Junction::{
                 //                 GeneralIndex, GeneralKey, Parachain,

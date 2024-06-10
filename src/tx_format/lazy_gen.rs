@@ -36,15 +36,13 @@ pub struct GenTxGen {
     params: Vec<u8>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GenQueryGen {
     chain: String,
     pallet_name: String,
     method_name: String,
-    params: String,//Vec<u8>,
+    params: String, //Vec<u8>,
 }
-
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SwapResponse {
@@ -259,7 +257,7 @@ pub async fn generic_tx_gen(
     chain: String,
     pallet_name: String,
     method_name: String,
-    params: Vec<u8>//Vec<u8>,
+    params: Vec<u8>, //Vec<u8>,
 ) -> Result<generic_result, Error> {
     let client = Client::new();
 

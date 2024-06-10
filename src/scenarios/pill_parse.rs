@@ -66,7 +66,7 @@ fn process_field(field: &mut Option<String>, webhook_loot: &HashMap<String, Valu
                 }
             }
             Err(_) => {
-    //        println!("No HTML content found in field");
+                //        println!("No HTML content found in field");
             }
         }
     }
@@ -154,7 +154,7 @@ impl PillParse {
     }
 
     pub fn contains_process() {
-        let pill_regex = Regex::new(
+        let _pill_regex = Regex::new(
             r#"<span[^>]*data-id="([^"]+)"[^>]*data-nodeindex="(\d+)"[^>]*>([^<]+)</span>"#,
         )
         .unwrap();
@@ -177,7 +177,7 @@ impl PillParse {
             .collect()
     }
 
-    fn is_valid_base58(value: &str) -> bool {
+    fn is_valid_base58(_value: &str) -> bool {
         true //validator::validate(value, "base58").is_ok()
     }
 
