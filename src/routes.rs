@@ -1,8 +1,8 @@
 // HTTP Endpoint routes
-use crate::database::db::{DBhandler, Loghandler};
+use crate::database::db::{DBhandler, Loghandler, string_to_logtype};
 use crate::database::decode::decompress_string;
 use crate::database::types::{
-    BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, LogsOut, ScenarioInfo,
+    BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, LogsOut, ScenarioLog, ScenarioInfo,
     ScenarioInfoOut, TxInfo, TxQueue, UrlResponse, Urldata,
 };
 use crate::jobs::threads::{thread_status, ThreadManager}; // ThreadInfo
@@ -242,6 +242,36 @@ pub async fn list_single_thread(
 
     return web::Json(thread_info);
 }
+
+
+/// curl -X POST -H "Content-Type: application/json" -d '{"id": "LSm-41cJY", "log_type": "query"}' http://localhost:8081/scenario/get_filter_logs
+#[post("/scenario/get_filter_logs")]
+pub async fn get_filtered_logs(
+    postdata: web::Json<ScenarioLog>,
+    l_db: web::Data<Loghandler>,
+) -> web::Json<LogsOut> {
+    let inne = postdata.into_inner();
+    let scenario_id = inne.clone().id;
+    let log_type_string = inne.log_type;
+
+    let log_type = match string_to_logtype(&log_type_string) {
+        Some(val) => val, 
+        _ =>  {  
+        return web::Json(LogsOut {
+            success: false,
+            result: Vec::new(),
+        })
+    }
+    };
+    let output: Vec<String> = match l_db.into_inner().get_log_entries(scenario_id, log_type) {
+        Ok(value) => value.into_iter().map(|entry| entry.msg).collect(),
+        _ => Vec::new(),
+    };
+    return web::Json(LogsOut {
+        success: true,
+        result: output, // can get the dates as well if want to
+    });
+ }
 
 // curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http://localhost:8081/scenario/worker/logs -v
 /// get execution logs | get the history of the executed scenario

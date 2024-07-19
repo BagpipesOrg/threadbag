@@ -7,6 +7,9 @@ check:
 test:
 	cargo test -- --nocapture
 
+testweb: 
+	cargo test --all-features test_webserver --  --nocapture
+
 fmt: 
 	cargo +nightly fmt --all
 

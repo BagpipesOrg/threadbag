@@ -1,5 +1,5 @@
 use crate::chains::chains::get_token_decimals_by_chain_name;
-use crate::database::db::{DBhandler, Loghandler};
+use crate::database::db::{DBhandler, Loghandler, LogTypes};
 //use crate::database::decode::decompress_string;
 use crate::error::Error;
 use crate::jobs::types::Command;
@@ -21,6 +21,7 @@ use std::sync::Arc;
 // use tokio's mpsc channel
 use tokio::time::sleep;
 use tokio::time::Duration;
+use tokio::time;
 
 fn hex_to_vec_u8(hex: &str) -> Vec<u8> {
     let hex = hex.trim_start_matches("0x");
@@ -87,8 +88,9 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
     println!("scenario data extracted ");
     loop {
         let o3 = g2.clone();
+        let mut previous_response: Option<HashMap<String, JsonValue>> = None;
         let mut webhook_loot: HashMap<String, JsonValue> = HashMap::new();
-
+        let mut previous_response: Option<HashMap<String, JsonValue>> = None; // spawn webhooks 
         println!("----------Start---------------");
         for action_node in o3.nodes {
             println!("looping at action node: {:?}", action_node);
@@ -124,6 +126,13 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                     let tx_gen =
                         generic_tx_gen(local_chain.clone(), pallet_name, method_name, params)
                             .await?;
+                   
+                    log_db.insert_log(
+                        scenario_id.clone(), 
+                        LogTypes::ChainTx,
+                        tx_gen.result.to_string()
+                    )?;
+                    /*
                     log_db.insert_tx(
                         scenario_id.clone(),
                         '0'.to_string(),
@@ -131,6 +140,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         "ChainTx".to_string(),
                         tx_gen.result.to_string(),
                     )?;
+                    */
                     log_db.insert_logs(
                         scenario_id.clone(),
                         "ChainTx Response was recieved".to_string(),
@@ -165,8 +175,16 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         scenario_id.clone(),
                         "ChainQuery Node Request built".to_string(),
                     )?;
+
                     let tx_gen =
                         query_chain(local_chain.clone(), pallet_name, method_name, params).await?;
+                    
+                    log_db.insert_log(
+                            scenario_id.clone(), 
+                            LogTypes::Query,
+                            tx_gen.result.to_string()
+                        )?;
+                    /*
                     log_db.insert_tx(
                         scenario_id.clone(),
                         '0'.to_string(),
@@ -174,6 +192,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         "ChainQuery".to_string(),
                         tx_gen.result.to_string(),
                     )?;
+                    */
                     log_db.insert_logs(
                         scenario_id.clone(),
                         "ChainQuery got response back".to_string(),
@@ -194,11 +213,43 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                         }
                     };
                     println!("got uiid");
-                    let latest_data: HashMap<String, JsonValue> = latest_webhookevents(uid.clone())
+                    let latest_data0: HashMap<String, JsonValue> = latest_webhookevents(uid.clone())
+                    .await
+                    .unwrap_or(HashMap::new()); 
+                  previous_response = Some(latest_data0.clone());
+
+                    time::sleep(Duration::from_secs(3)).await;
+                    // force it to wait for new data
+                    loop {
+                        let latest_data: HashMap<String, JsonValue> = latest_webhookevents(uid.clone())
                         .await
-                        .unwrap_or(HashMap::new());
+                        .unwrap_or(HashMap::new());                   
+                            if let Some(ref prev) = previous_response {
+                                if &latest_data != prev {
+                                    println!("New Puff: {:?}", latest_data);
+                    
+                                     break;
+                                }
+                            } else {
+                               // println!("Old Puff: {:?}", puff);
+                            }
+                    
+                            previous_response = Some(latest_data.clone());
+                    
+                            // Delay for 2 seconds
+                            time::sleep(Duration::from_secs(2)).await;
+                    
+                    };
+                    
                     let upi = format!("Latest data got back from uuid: {:?}", latest_data);
                     println!("{}", upi);
+                    /*
+                    log_db.insert_log(
+                        scenario_id.clone(),
+                        LogTypes::Webhook,
+                        latest_data
+                    )?;
+                    */
                     log_db.insert_logs(
                         scenario_id.clone(),
                         "Got webhook data from the api: ".to_string(),
@@ -262,6 +313,11 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                                 }
                             }
                             .result;
+                        log_db.insert_log(
+                            scenario_id.clone(),
+                            LogTypes::Tx,
+                            remark_tx.to_string().clone()
+                        )?;
                             log_db.insert_tx(
                                 scenario_id.clone(),
                                 0.to_string(),
@@ -341,6 +397,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                                 d_address,
                             )
                             .await
+              
                             {
                                 Ok(value) => value.txdata, // if all good return the txdata
                                 Err(error) => {
@@ -349,8 +406,14 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                                 }
                                 _ => "Could not generate transaction".to_string(),
                             };
+                            log_db.insert_log(
+                                scenario_id.clone(),
+                                LogTypes::Tx,
+                                tx_response.to_string().clone()
+                            )?;
                             println!("xTransfer tx: {:?}", tx_response);
                             log_db.insert_logs(scenario_id.clone(), tx_response.clone())?;
+                         /*
                             log_db.insert_tx(
                                 scenario_id.clone(),
                                 converted_amount.to_string(),
@@ -358,6 +421,7 @@ pub async fn start_job_worker(scenario_id: String, delay: u64) -> Result<(), Err
                                 "xTransfer".to_string(),
                                 tx_response,
                             )?;
+                            */
                             log_db.insert_logs(
                                 scenario_id.clone(),
                                 "xTransfer transaction type".to_string(),

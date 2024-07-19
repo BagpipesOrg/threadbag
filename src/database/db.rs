@@ -5,9 +5,10 @@ use crate::error::Error as CrateError;
 use crate::scenarios::scenario_parse::generate_random_id;
 use crate::scenarios::scenario_types::Graph;
 use crate::tx_format::lazy_gen::download_scenario_data;
-use anyhow::Error;
+use anyhow::{Error};
+use chrono::{Utc, DateTime, TimeZone};
 
-use chrono::Utc;
+use core::result::Result::Ok;
 use sled;
 use sled::{Db, IVec}; //IVec Tree
 use std::str;
@@ -20,6 +21,68 @@ pub struct LogEntry {
     pub msg: String,
     pub Date: String,
 }
+
+pub enum LogTypes {
+    ChainTx,
+    Query,
+    Tx,
+    HTTP, 
+    Webhook,
+    Debug,
+    Unknown, 
+}
+
+
+
+
+fn logtypes_to_string(logtype: LogTypes, scenario_id: String) -> String {
+
+    let outme: String = match logtype {
+    LogTypes::ChainTx => {
+        let o: String = format!("{}_chaintx", scenario_id);
+        o
+     },
+     LogTypes::Debug => {
+         format!("{}_chaintx", scenario_id)
+
+     },
+     LogTypes::HTTP => {
+         format!("{}_http", scenario_id)
+
+     },
+     LogTypes::Webhook => {
+        format!("{}_webhook", scenario_id)
+     }
+     LogTypes::Query => {
+         format!("{}_query", scenario_id)
+
+     },
+     LogTypes::Tx => {
+         format!("{}_tx", scenario_id)
+
+     },
+     LogTypes::Unknown => {
+        format!("{}_unknown", scenario_id)
+    }
+    };
+    outme
+}
+
+pub fn string_to_logtype(input: &str,) -> Option<LogTypes> {
+    // Perform the reverse mapping based on the input string
+    match input {
+        "chaintx" => Some(LogTypes::ChainTx),
+        "debug" => Some(LogTypes::Debug),
+        "http" => Some(LogTypes::HTTP),
+        "webhook" => Some(LogTypes::Webhook),
+        "query" => Some(LogTypes::Query),
+        "tx" => Some(LogTypes::Tx),
+        "unknown" => Some(LogTypes::Unknown),
+        _ => None, // Return None for unrecognized input
+    }
+}
+
+
 
 #[derive(Debug, Clone)]
 pub struct DBhandler {}
@@ -34,6 +97,14 @@ fn custom_merge_operator() -> impl Fn(&[u8], Option<&[u8]>, &[u8]) -> Option<Vec
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Loghandler {}
+
+
+pub fn time_now() -> String {
+    let utc: DateTime<Utc> = Utc::now();
+
+    return utc.format("%Y-%m-%dT%H:%M:%SZ").to_string();
+
+}
 
 /// Polodb
 impl Loghandler {
@@ -50,7 +121,7 @@ impl Loghandler {
         chain: String,
         tx_type: String,
         tx: String,
-    ) -> Result<(), Error> {
+    ) -> Result<(), anyhow::Error> {
         let db = self.read_db()?;
         let tx_pool = format!("{}_txpool", scenario_id);
         let collection = db.collection::<TxInfo>(tx_pool.as_str());
@@ -61,6 +132,25 @@ impl Loghandler {
             Date: format!("{:?}", Utc::now()),
             tx: tx,
         })?;
+        Ok(())
+    }
+    /// insert log based on logtypes
+    pub fn insert_log(
+        &self,
+        scenario_id: String,
+        log_type: LogTypes,
+        log_message: String,
+    ) -> Result<(), Error> {
+        let log_id: String = logtypes_to_string(log_type, scenario_id.clone());
+
+        let db = self.read_db()?;
+        let collection = db.collection::<LogEntry>(log_id.as_str());
+
+        collection.insert_one(LogEntry {
+            msg: log_message,
+            Date: time_now(),
+        })?;
+
         Ok(())
     }
 
@@ -81,17 +171,28 @@ impl Loghandler {
         let collection = db.collection::<LogEntry>(scenario_id.as_str());
         collection.insert_one(LogEntry {
             msg: message,
-            Date: "now".to_string(),
+            Date: time_now(),
         })?;
         Ok(())
     }
 
+    /// get log entries based on logtype
+    pub fn get_log_entries(&self, scenario_id: String, log_type: LogTypes) -> Result<Vec<LogEntry>, Error> {
+        let db = self.read_db()?;
+        let log_id: String = logtypes_to_string(log_type, scenario_id.clone());
+        let collection = db.collection::<LogEntry>(log_id.as_str());
+        let entries = collection.find(None)?; // return all entries under parent key
+        let listan: Vec<LogEntry> = entries.into_iter().map(|entry| entry.unwrap()).collect();
+        Ok(listan)
+
+    }
+
     /// Returns all logs in the Vec<LogEntry> format
-    pub fn get_entry(&self, scenario_id: String) -> Result<Vec<LogEntry>, Error> {
+    pub fn get_entry(&self, scenario_id: String) -> Result<Vec<LogEntry>, CrateError> {
         let db = self.read_db()?;
         let collection = db.collection::<LogEntry>(scenario_id.as_str());
         let entries = collection.find(None)?; // return all entries under parent key
-        let listan: Vec<LogEntry> = entries.into_iter().map(|entry| entry.unwrap()).collect();
+        let listan: Vec<LogEntry> = entries.into_iter().map(|entry| entry.unwrap()).collect::<Vec<LogEntry>>();
         Ok(listan)
     }
 
@@ -147,7 +248,7 @@ impl DBhandler {
         }
     }
     /// println! db stats
-    pub fn display_stats(&self) -> Result<(), CrateError> {
+    pub fn display_stats(&self) -> Result<(), Error> {
         let db = self.read_db()?;
         let amount_of_entries = count_entries(&db);
         let size = db.size_on_disk()?;
@@ -167,7 +268,7 @@ impl DBhandler {
                 let decoded = decompress_string(value)
                     .await
                     .expect("Failed to decompress string, invalid value");
-                // println!("decoded at: {}", decoded);
+                println!("decoded at: {}", decoded);
                 let graph: Graph =
                     serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
                 return Ok(graph);

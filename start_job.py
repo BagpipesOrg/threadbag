@@ -8,7 +8,7 @@ payload = "eJzdVtty2zYQ/Rc8SyxxI0C9xXYcN03Tie3EuUzGA5IQxYgkHJCq7Xj0712KF0mUGEcz7
 #print("Response: ")
 #print(xx.text)
 #s = xx.json()
-scenario_id = "qSxt94jqC"#"+DN*1Cug4"#s.get('shortUrl', 'not found')
+scenario_id = "LSm-41cJY"#"+DN*1Cug4"#s.get('shortUrl', 'not found')
 #print("Scenario id saved as:", scenario_id)
 
 print("Starting job: ")
