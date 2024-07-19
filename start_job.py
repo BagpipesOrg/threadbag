@@ -12,22 +12,25 @@ scenario_id = "LSm-41cJY"#"+DN*1Cug4"#s.get('shortUrl', 'not found')
 #print("Scenario id saved as:", scenario_id)
 
 print("Starting job: ")
-js = requests.post(base+"/job/start", json={"id": scenario_id})
-print("start job response:", js.json())
+#js = requests.post(base+"/job/start", json={"id": scenario_id})
+#print("start job response:", js.json())
 print("sleeping for 10 seconds.. ")
 time.sleep(10)
 print("Quering logs for ", scenario_id)
 logs = requests.post(base+"/scenario/worker/logs", json={"id": scenario_id})
 print("Logs returned: ", logs.text)
 print("sleeping for 10 seconds.. ")
-time.sleep(10)
+time.sleep(13)
 
-## Query logs for our scenario
-print("Quering logs for: ", scenario_id)
-logs = requests.post(base+"/scenario/worker/logs", json={"id": scenario_id})
-# example output:
+print("quering /scenario/get_filter_log")
+## Query custom log:
+ #curl -X POST -H "Content-Type: application/json" -d '{"id": "LSm-41cJY", "log_type": "query"}' http://localhost:8081/scenario/get_filter_logs
+query = requests.post(base+"/scenario/get_filter_logs", json={"id": scenario_id, "log_type": "query"})
+print("[query]Logs returned: ", query.text)
+
+
 #{"success":true,"result":["Starting worker","Decoding payload..","Parsed scenario data","Making http request: Url: https://example.com Method: post","Building http request","Building ChainNode request","Drafting xTransfer tx from polkadot to assetHub"]}
-print("Logs returned: ", logs.text)
+
 
 ## Query for the transaction que 
 txmempool = requests.post(base+"/scenario/tx", json={"id": scenario_id})

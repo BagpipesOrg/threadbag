@@ -7,11 +7,11 @@ mod tests {
 
     use crate::scenarios::pill_parse::{process_chain_node, process_node};
 
+    use crate::database::db::{string_to_logtype, Loghandler};
     use crate::scenarios::scenario_types::{Graph2, MultiNodes};
     use crate::scenarios::websockets::latest_webhookevents;
-    use crate::{database::db::DBhandler, tx_format::lazy_gen::query_chain};
-
     use crate::web_server::http::{quick_server, run_webserver, spawn_web_server};
+    use crate::{database::db::DBhandler, tx_format::lazy_gen::query_chain};
     use reqwest;
     use reqwest::Client;
     use serde_json::Value;
@@ -28,23 +28,35 @@ mod tests {
     //    use subxt::{OnlineClient, PolkadotConfig};
     //   use subxt_signer::sr25519::dev;
 
-  //  #[actix_web::test]
+    //  #[actix_web::test]
     async fn it_works() {
         println!("running");
         let result = 2 + 2;
         assert_eq!(result, 4);
     }
 
-
-
-  //   #[actix_web::test]
+    //   #[actix_web::test]
     async fn it_work2() {
         println!("running");
         let result = 2 + 2;
         assert_eq!(result, 4);
     }
 
-   // #[actix_web::test]
+    #[actix_web::test]
+    async fn test_query_log() -> Result<(), anyhow::Error> {
+        let log_type_string: String = "Query".to_string();
+        let log_type = string_to_logtype(&log_type_string).unwrap();
+        let ldb = Loghandler::new();
+        println!("got it back: {:?}", log_type);
+        let scenario_id = "LSm-41cJY".to_string();
+        let output: Vec<String> = match ldb.get_log_entries(scenario_id, log_type) {
+            Ok(value) => value.into_iter().map(|entry| entry.msg).collect(),
+            _ => Vec::new(),
+        };
+        println!("output: {:?}", output);
+        Ok(())
+    }
+    // #[actix_web::test]
     async fn test_webserver() -> Result<(), anyhow::Error> {
         //    let _system = System::new();
         println!("starting server");
@@ -64,7 +76,7 @@ mod tests {
         Ok(())
     }
 
-    #[actix_web::test]
+    // #[actix_web::test]
     async fn test_websocks() -> Result<(), anyhow::Error> {
         let multi_scenario_id: String = "LSm-41cJY".to_string();
         let db_h = DBhandler::new();

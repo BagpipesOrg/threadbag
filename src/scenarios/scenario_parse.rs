@@ -3,7 +3,7 @@ use crate::scenarios::scenario_types::{Graph, Graph2, MultiNodes, ScenarioSummar
 use crate::scenarios::scenario_types::{HTTPNode, HTTP_NODE_FORMDATA};
 use getrandom::getrandom;
 
-const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$*+_"; // supported charset
+const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$*+_-?"; // supported charset
 const ID_LENGTH: usize = 9; // size / length
 
 // scenario_info

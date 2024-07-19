@@ -356,3 +356,10 @@ Logs returned:  {"success":true,"result":["Starting worker","Decoding payload.."
 Getting transaction queue:  {"mempool":[{"chain":"polkadot","amount":"0","txType":"ChainQuery","Date":"2024-06-01T22:12:21.018201473Z","tx":"{\"nonce\":\"8\",\"consumers\":\"0\",\"providers\":\"1\",\"sufficients\":\"0\",\"data\":{\"free\":\"13,096,674,612\",\"reserved\":\"0\",\"frozen\":\"0\",\"flags\":\"170,141,183,460,469,231,731,687,303,715,884,105,728\"}}"}]}
 
 ```
+
+
+### Get just the query result:
+```shell
+$ curl -X POST -H "Content-Type: application/json" -d '{"id": "LSm-41cJY", "log_type": "query"}' http://localhost:8081/scenario/get_filter_logs 
+{"success":true,"result":["{\"nonce\":\"10\",\"consumers\":\"0\",\"providers\":\"1\",\"sufficients\":\"0\",\"data\":{\"free\":\"10,033,245,663\",\"reserved\":\"0\",\"frozen\":\"0\",\"flags\":\"170,141,183,460,469,231,731,687,303,715,884,105,728\"}}"]}
+```

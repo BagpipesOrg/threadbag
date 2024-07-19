@@ -70,7 +70,6 @@ impl From<polodb_core::Error> for Error {
     }
 }
 
-
 impl From<std::string::FromUtf8Error> for Error {
     fn from(src: std::string::FromUtf8Error) -> Error {
         Error::Utf8StringError(src)
