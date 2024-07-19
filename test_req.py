@@ -57,13 +57,24 @@ print("sleeping for 10 seconds.. ")
 time.sleep(10)
 
 ## Query logs for our scenario
-print("Quering logs for: ", scenario_id)
+print("/scenario/worker/logs logs for: ", scenario_id)
 logs = requests.post(base+"/scenario/worker/logs", json={"id": scenario_id})
 # example output:
 #{"success":true,"result":["Starting worker","Decoding payload..","Parsed scenario data","Making http request: Url: https://example.com Method: post","Building http request","Building ChainNode request","Drafting xTransfer tx from polkadot to assetHub"]}
 print("Logs returned: ", logs.text)
-
+print("sleeping for 10 seconds.. ")
+time.sleep(10)
 ## Query for the transaction que 
 txmempool = requests.post(base+"/scenario/tx", json={"id": scenario_id})
+
+print("sleeping for 10 seconds.. ")
+time.sleep(10)
+print("quering /scenario/get_filter_log")
+## Query custom log:
+ curl -X POST -H "Content-Type: application/json" -d '{"id": "LSm-41cJY", "log_type": "query"}' http://localhost:8081/scenario/get_filter_logs
+query = requests.post(base+"/scenario/get_filter_logs", json={"id": scenario_id, "log_type": "query"})
+ 
+
+
 
 print("Getting transaction queue: ", txmempool.text)

@@ -28,14 +28,23 @@ mod tests {
     //    use subxt::{OnlineClient, PolkadotConfig};
     //   use subxt_signer::sr25519::dev;
 
-    #[actix_web::test]
+  //  #[actix_web::test]
     async fn it_works() {
         println!("running");
         let result = 2 + 2;
         assert_eq!(result, 4);
     }
 
-    #[actix_web::test]
+
+
+  //   #[actix_web::test]
+    async fn it_work2() {
+        println!("running");
+        let result = 2 + 2;
+        assert_eq!(result, 4);
+    }
+
+   // #[actix_web::test]
     async fn test_webserver() -> Result<(), anyhow::Error> {
         //    let _system = System::new();
         println!("starting server");
@@ -57,7 +66,7 @@ mod tests {
 
     #[actix_web::test]
     async fn test_websocks() -> Result<(), anyhow::Error> {
-        let multi_scenario_id: String = "qSxt94jqC".to_string();
+        let multi_scenario_id: String = "LSm-41cJY".to_string();
         let db_h = DBhandler::new();
         println!("donwloading scenario data");
         let out = db_h.get_remote_entry(multi_scenario_id).await.unwrap();

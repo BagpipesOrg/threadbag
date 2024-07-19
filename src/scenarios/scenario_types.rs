@@ -222,7 +222,7 @@ pub struct SelectedMethod3 {
     pub name: Option<String>,
     #[serde(rename = "type")]
     pub method_type: JsonValue,
-    pub docs: String,
+    pub docs: JsonValue,
     pub fields: Option<Vec<MethodField3>>,
     pub index: Option<String>,
 }
@@ -233,7 +233,7 @@ pub struct MethodField3 {
     #[serde(rename = "type")]
     field_type: Option<JsonValue>,
     pub typeName: Option<JsonValue>,
-    pub docs: Option<String>,
+    pub docs: Option<JsonValue>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

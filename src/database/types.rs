@@ -85,6 +85,12 @@ pub struct ScenarioResponse {
     message: String,
 }
 
+#[derive(Serialize, Clone, Debug, Deserialize)]
+pub struct ScenarioLog {
+    pub id: String,
+    pub log_type: String, 
+}
+
 #[derive(Serialize, Debug, Deserialize)]
 pub struct ScenarioInfo {
     pub id: String,

@@ -27,6 +27,8 @@ pub enum Error {
 
     /// Invalid scenarioid
     ScenarioIdNotFound,
+    /// polodb database problem
+    Polodb(polodb_core::Error),
 
     /// Invalid destination chain
     InvalidDestinationChain,
@@ -61,6 +63,13 @@ impl From<sled::Error> for Error {
         Error::Sled(src)
     }
 }
+
+impl From<polodb_core::Error> for Error {
+    fn from(src: polodb_core::Error) -> Error {
+        Error::Polodb(src)
+    }
+}
+
 
 impl From<std::string::FromUtf8Error> for Error {
     fn from(src: std::string::FromUtf8Error) -> Error {
