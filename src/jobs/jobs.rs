@@ -1,3 +1,10 @@
+#![allow(dead_code)]
+#![allow(unused_mut)]
+#![allow(unused_assignments)]
+#![allow(unused_labels)] // loop lables
+#![allow(unreachable_patterns)]
+#![allow(unused_variables)]
+
 use crate::chains::chains::get_token_decimals_by_chain_name;
 use crate::database::db::{DBhandler, LogTypes, Loghandler};
 //use crate::database::decode::decompress_string;

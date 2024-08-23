@@ -1,3 +1,6 @@
+#![allow(non_snake_case)]
+#![allow(dead_code)]
+
 use crate::scenarios::scenario_types::ScenarioSummary;
 
 use serde::{Deserialize, Serialize};
@@ -29,7 +32,7 @@ pub struct TxInfo {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct job_start {
+pub struct JobStart {
     pub scenario_id: String,
     pub delay: u64, // f32 32 should be enough
 }

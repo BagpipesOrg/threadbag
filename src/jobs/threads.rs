@@ -11,14 +11,14 @@ pub struct ThreadManager {
 #[derive(Debug, Clone, Serialize)]
 pub struct ThreadInfo {
     name: String,
-    latest_status: thread_status,
+    latest_status: ThreadStatus,
     #[serde(skip)]
     shutdown_tx: Option<watch::Sender<()>>,
 }
 
 // Thread status enum definition
 #[derive(Debug, Clone, Serialize, Copy)]
-pub enum thread_status {
+pub enum ThreadStatus {
     Running,
     Stopped,
     NotFound,
@@ -41,7 +41,7 @@ impl ThreadManager {
 
         let thread_info = ThreadInfo {
             name: name.clone(),
-            latest_status: thread_status::Running,
+            latest_status: ThreadStatus::Running,
             shutdown_tx: Some(shutdown_tx),
         };
 
@@ -61,20 +61,20 @@ impl ThreadManager {
             // Update the thread status to Stopped
             let mut active_threads = active_threads_clone.lock().unwrap();
             if let Some(thread) = active_threads.iter_mut().find(|t| t.name == name) {
-                thread.latest_status = thread_status::Stopped;
+                thread.latest_status = ThreadStatus::Stopped;
             }
         });
     }
 
     /// Get a single thread's status
-    pub fn get_thread_status(&self, thread_name: String) -> thread_status {
+    pub fn get_thread_status(&self, thread_name: String) -> ThreadStatus {
         let listan = self.get_active_threads();
         for item in listan.iter() {
             if item.name == thread_name {
                 return item.latest_status;
             }
         }
-        return thread_status::NotFound;
+        return ThreadStatus::NotFound;
     }
 
     /// Get all running threads
@@ -83,15 +83,15 @@ impl ThreadManager {
     }
 
     /// Stop a thread
-    pub fn stop_thread(&self, thread_name: &str) -> thread_status {
+    pub fn stop_thread(&self, thread_name: &str) -> ThreadStatus {
         let mut active_threads = self.active_threads.lock().unwrap();
         if let Some(thread) = active_threads.iter_mut().find(|t| t.name == thread_name) {
             if let Some(shutdown_tx) = &thread.shutdown_tx {
                 let _ = shutdown_tx.send(());
-                thread.latest_status = thread_status::Stopped;
-                return thread_status::Stopped;
+                thread.latest_status = ThreadStatus::Stopped;
+                return ThreadStatus::Stopped;
             }
         }
-        thread_status::NotFound
+        ThreadStatus::NotFound
     }
 }

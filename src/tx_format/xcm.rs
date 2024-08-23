@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 // xcm transaction generation
 // todo cache the connections
 use crate::chains::chains::chains;

@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 // sled db to store and fetch scenarios
 use crate::database::decode::decompress_string;
 use crate::database::types::{TxInfo, Urldata};
@@ -6,7 +8,7 @@ use crate::scenarios::scenario_parse::generate_random_id;
 use crate::scenarios::scenario_types::Graph;
 use crate::tx_format::lazy_gen::download_scenario_data;
 use anyhow::Error;
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc}; // TimeZone,
 
 use core::result::Result::Ok;
 use sled;

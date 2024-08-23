@@ -104,11 +104,12 @@ async fn main() -> std::io::Result<()> {
     let ready_clone = ready.clone();
     actix_rt::spawn(async move {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Introduce a delay
-        tx.send(Command::Start {
-            scenario_id: "sending from second handle".to_string(),
-            delay: 100u64,
-        })
-        .await;
+        let _ = tx
+            .send(Command::Start {
+                scenario_id: "sending from second handle".to_string(),
+                delay: 100u64,
+            })
+            .await;
         let _ = ready.lock().await; // Notify task_manager that it is ready
     });
     //spanning thread
@@ -133,7 +134,10 @@ async fn main() -> std::io::Result<()> {
                     // start_job_worker start_job_worker
                     println!("Starting worker thread");
                     let _worker_thread = actix_rt::spawn(async move {
-                        start_job_worker(scenario_id, delay).await;
+                        let _ = match start_job_worker(scenario_id, delay).await {
+                            Err(error) => println!("start job error: {:?}", error),
+                            _ => {}
+                        };
                     });
                     println!("worker thread");
                     println!("output: {}", outme);
@@ -147,6 +151,9 @@ async fn main() -> std::io::Result<()> {
     // Wait for all threads to finish
 
     tokio::try_join!(dummy_thread_handle, task_manager_handle)?;
-    tokio::try_join!(http_handle)?;
+    let _ = match tokio::try_join!(http_handle) {
+        Err(_error) => {}
+        _ => {}
+    };
     Ok(())
 }

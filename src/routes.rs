@@ -1,3 +1,4 @@
+#![allow(unreachable_code)]
 // HTTP Endpoint routes
 use crate::database::db::{string_to_logtype, DBhandler, Loghandler};
 use crate::database::decode::decompress_string;
@@ -5,7 +6,7 @@ use crate::database::types::{
     BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, LogsOut, ScenarioInfo,
     ScenarioInfoOut, ScenarioLog, TxInfo, TxQueue, UrlResponse, Urldata,
 };
-use crate::jobs::threads::{thread_status, ThreadManager}; // ThreadInfo
+use crate::jobs::threads::{ThreadManager, ThreadStatus}; // ThreadInfo
 use crate::scenarios::scenario_parse::{multi_scenario_info, scenario_information};
 use crate::scenarios::scenario_types::{Graph, ScenarioSummary};
 use crate::Command;
@@ -89,12 +90,12 @@ pub async fn xcm_asset_transfer() -> HttpResponse {
 /// stop
 #[post("/job/stop")]
 pub async fn stop_job(
-    data: web::Json<ScenarioInfo>, // job_start
+    data: web::Json<ScenarioInfo>, // JobStart
     datan: web::Data<Arc<ThreadManager>>,
     _tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
     _db: web::Data<DBhandler>,
 ) -> web::Json<GenericOut> {
-    println!("job_start called");
+    println!("JobStart called");
     let my_data: ScenarioInfo = data.into_inner();
     println!("data collected");
     let scenario_id = my_data.id;
@@ -125,7 +126,7 @@ pub async fn start_job(
     tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
     _db: web::Data<DBhandler>,
 ) -> web::Json<GenericOut> {
-    println!("job_start called");
+    println!("JobStart called");
     let my_data: ScenarioInfo = data.into_inner();
     println!("data collected");
     let scenario_id = my_data.id;
@@ -135,12 +136,17 @@ pub async fn start_job(
 
     // send job start command
     println!("route job sending start command");
-    tx.send(Command::Start {
-        //job: "sending from second handle".to_string(),
-        scenario_id: scenario_id,
-        delay: 200u64,
-    })
-    .await;
+    let _ = match tx
+        .send(Command::Start {
+            //job: "sending from second handle".to_string(),
+            scenario_id: scenario_id,
+            delay: 200u64,
+        })
+        .await
+    {
+        Err(_error) => {}
+        _ => {}
+    };
     return web::Json(GenericOut {
         success: true,
         result: "Job started".to_string(),
@@ -236,7 +242,7 @@ pub async fn list_all_threads(data: web::Data<Arc<ThreadManager>>) -> HttpRespon
 pub async fn list_single_thread(
     postdata: web::Json<ScenarioInfo>,
     data: web::Data<Arc<ThreadManager>>,
-) -> web::Json<thread_status> {
+) -> web::Json<ThreadStatus> {
     let scenario_id = postdata.into_inner().id;
     let thread_info = data.get_thread_status(scenario_id);
 
