@@ -1,3 +1,7 @@
+#![allow(non_snake_case)]
+#![allow(dead_code)]
+#![allow(non_camel_case_types)]
+
 use std::collections::HashMap;
 
 pub struct chain_info {
@@ -28,7 +32,7 @@ struct AssetChainInfo {
     relay: bool,
 }
 
-pub fn list_chains() -> HashMap<u64, AssetChainInfo> {
+fn list_chains() -> HashMap<u64, AssetChainInfo> {
     let mut chain_list = HashMap::new();
 
     let asset_hub = AssetChainInfo {

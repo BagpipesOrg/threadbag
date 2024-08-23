@@ -1,4 +1,6 @@
 #![allow(non_snake_case)]
+#![allow(non_camel_case_types)]
+#![allow(unreachable_patterns)]
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;

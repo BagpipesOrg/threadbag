@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+#![allow(dead_code)]
 use crate::error::Error;
 use crate::scenarios::scenario_types::{ChainNode, FormData, HTTPNode, HTTP_NODE_FORMDATA};
 use regex::Regex;

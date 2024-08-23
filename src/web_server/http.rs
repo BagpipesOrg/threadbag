@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::jobs::types::Command;
 use crate::routes::{
     broadcast_tx, dot_openchannels, get_logs, get_url, info, list_single_thread, save_url,

@@ -1,3 +1,7 @@
+#![allow(dead_code)]
+#![allow(non_camel_case_types)]
+#![allow(unreachable_code)]
+
 use crate::database::types::GetUrlResponse;
 use crate::error::Error;
 use reqwest;
