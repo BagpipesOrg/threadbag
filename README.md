@@ -89,7 +89,9 @@ $ cargo test -- --nocapture
 ```
 ## Run debug:   
 ```shell
-
+make build_unstable
+make run_debug &
+make run_console
 ```          
 
 ![](debugmode.png)     
