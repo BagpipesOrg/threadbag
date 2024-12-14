@@ -9,7 +9,8 @@ use crate::scenarios::scenario_types::Graph;
 use crate::tx_format::lazy_gen::download_scenario_data;
 use anyhow::Error;
 use chrono::{DateTime, Utc}; // TimeZone,
-
+use polodb_core::{CollectionT, Database};
+use polodb_core::bson::{doc}; // Document
 use core::result::Result::Ok;
 use sled;
 use sled::{Db, IVec}; //IVec Tree
@@ -101,7 +102,7 @@ pub fn time_now() -> String {
 impl Loghandler {
     /// read the logs.db
     pub fn read_db(&self) -> Result<PoloDB, Error> {
-        let open: PoloDB = PoloDB::open_file("logs.db")?;
+        let open: PoloDB =  Database::open_path("logs.db")?;
         return Ok(open);
     }
     /// insert transaction to the Mempool
@@ -151,7 +152,9 @@ impl Loghandler {
         let tx_pool = format!("{}_txpool", scenario_id);
 
         let collection = db.collection::<TxInfo>(tx_pool.as_str());
-        let entries = collection.find(None)?; // return all entries under parent key
+        let entries = collection.find(doc! {}).run()?;
+
+      //  let entries = collection.find(None)?; // return all entries under parent key
         let listan: Vec<TxInfo> = entries.into_iter().map(|entry| entry.unwrap()).collect();
         Ok(listan)
     }
@@ -176,7 +179,9 @@ impl Loghandler {
         let db = self.read_db()?;
         let log_id: String = logtypes_to_string(log_type, scenario_id.clone());
         let collection = db.collection::<LogEntry>(log_id.as_str());
-        let entries = collection.find(None)?; // return all entries under parent key
+        let entries = collection.find(doc! {}).run()?;
+
+//        let entries = collection.find(None)?; // return all entries under parent key
         let listan: Vec<LogEntry> = entries.into_iter().map(|entry| entry.unwrap()).collect();
         Ok(listan)
     }
@@ -185,7 +190,9 @@ impl Loghandler {
     pub fn get_entry(&self, scenario_id: String) -> Result<Vec<LogEntry>, CrateError> {
         let db = self.read_db()?;
         let collection = db.collection::<LogEntry>(scenario_id.as_str());
-        let entries = collection.find(None)?; // return all entries under parent key
+        let entries = collection.find(doc! {}).run()?;
+
+        //let entries = collection.find(None)?; // return all entries under parent key
         let listan: Vec<LogEntry> = entries
             .into_iter()
             .map(|entry| entry.unwrap())
@@ -197,7 +204,8 @@ impl Loghandler {
     pub fn get_all_entries(&self) -> Result<Vec<LogEntry>, Error> {
         let db = self.read_db()?;
         let collection = db.collection::<LogEntry>("logs");
-        let entries = collection.find(None)?;
+        let entries = collection.find(doc! {}).run()?;
+      //  let books = collection.find(None)?;
         let listan: Vec<LogEntry> = entries.into_iter().map(|entry| entry.unwrap()).collect();
 
         Ok(listan)

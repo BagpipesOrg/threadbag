@@ -87,8 +87,12 @@ make kill_threadbag
 ```shell
 $ cargo test -- --nocapture
 ```
+## Run debug:   
+```shell
 
+```          
 
+![](debugmode.png)     
 
 
 ## How-to:  
