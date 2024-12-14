@@ -16,6 +16,18 @@ fmt:
 build: 
 	cargo build --release
 
+run_debug:
+	TOKIO_CONSOLE_BIND="localhost:6666" RUSTFLAGS="--cfg tokio_unstable" cargo run                     
+
+run_console:
+	tokio-console http://localhost:6666
+
+build_unstable:
+	RUSTFLAGS="--cfg tokio_unstable" cargo build
+
+install_console:
+	cargo install --locked tokio-console
+
 checkdep:
 	cargo +nightly udeps
 

@@ -44,8 +44,8 @@ pub fn cors_middleware() -> Cors {
 async fn main() -> std::io::Result<()> {
     // logger
     std::env::set_var("RUST_LOG", "debug");
-    env_logger::init();
-
+//    env_logger::init();
+    console_subscriber::init();
     //  print_banner();
     // Explicitly specify the type for the channel
     // let (_panic_sender, mut _panic_receiver): (mpsc::Sender<&str>, mpsc::Receiver<&str>) = mpsc::channel(1);
