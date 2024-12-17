@@ -12,6 +12,7 @@ use tokio::time::{sleep, Duration};
 //mod cli;
 //use cli::print_banner;
 mod chains;
+mod core;
 pub mod database;
 mod error;
 mod jobs;
@@ -44,7 +45,7 @@ pub fn cors_middleware() -> Cors {
 async fn main() -> std::io::Result<()> {
     // logger
     std::env::set_var("RUST_LOG", "debug");
-//    env_logger::init();
+    //    env_logger::init();
     console_subscriber::init();
     //  print_banner();
     // Explicitly specify the type for the channel

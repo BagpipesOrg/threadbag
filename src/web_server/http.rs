@@ -2,8 +2,8 @@
 
 use crate::jobs::types::Command;
 use crate::routes::{
-    broadcast_tx, dot_openchannels, get_logs, get_url, info, list_single_thread, save_url,
-    scenario_info, scenario_transactions, start_job, stop_job, xcm_asset_transfer,
+    broadcast_tx, dot_openchannels, get_logs, get_url, get_version, info, list_single_thread,
+    save_url, scenario_info, scenario_transactions, start_job, stop_job, xcm_asset_transfer,
 };
 use crate::DBhandler;
 use crate::{cors_middleware, Loghandler, ThreadManager};
@@ -57,6 +57,7 @@ pub fn run_webserver(listener: TcpListener) -> Result<Server, std::io::Error> {
             .app_data(web::Data::new(l_db.clone()))
             .service(xcm_asset_transfer)
             .service(get_url)
+            .service(get_version)
             .service(scenario_info)
             .service(save_url)
             .service(get_logs)

@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::core::error::Error;
 use reqwest::Client;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
