@@ -1,18 +1,18 @@
 #![allow(non_snake_case)]
 
 // sled db to store and fetch scenarios
+use crate::core::error::Error as CrateError;
 use crate::database::decode::decompress_string;
 use crate::database::types::{TxInfo, Urldata};
-use crate::error::Error as CrateError;
 use crate::scenarios::scenario_parse::generate_random_id;
 use crate::scenarios::scenario_types::Graph;
 use crate::tx_format::lazy_gen::download_scenario_data;
 use anyhow::Error;
 use chrono::{DateTime, Utc}; // TimeZone,
-use polodb_core::{CollectionT, Database};
-use polodb_core::bson::{doc}; // Document
 use core::result::Result::Ok;
-use sled;
+use polodb_core::bson::doc; // Document
+use polodb_core::{CollectionT, Database};
+
 use sled::{Db, IVec}; //IVec Tree
 use std::str;
 
@@ -81,6 +81,9 @@ pub fn string_to_logtype(input: &str) -> Option<LogTypes> {
 #[derive(Debug, Clone)]
 pub struct DBhandler {}
 
+#[derive(Debug, Clone)]
+pub struct DBhandle {}
+
 fn custom_merge_operator() -> impl Fn(&[u8], Option<&[u8]>, &[u8]) -> Option<Vec<u8>> {
     |_, existing_value, merged_bytes| {
         let mut merged = existing_value.map_or_else(Vec::new, |iv| iv.to_vec());
@@ -102,7 +105,7 @@ pub fn time_now() -> String {
 impl Loghandler {
     /// read the logs.db
     pub fn read_db(&self) -> Result<PoloDB, Error> {
-        let open: PoloDB =  Database::open_path("logs.db")?;
+        let open: PoloDB = Database::open_path("logs.db")?;
         return Ok(open);
     }
     /// insert transaction to the Mempool
@@ -154,7 +157,7 @@ impl Loghandler {
         let collection = db.collection::<TxInfo>(tx_pool.as_str());
         let entries = collection.find(doc! {}).run()?;
 
-      //  let entries = collection.find(None)?; // return all entries under parent key
+        //  let entries = collection.find(None)?; // return all entries under parent key
         let listan: Vec<TxInfo> = entries.into_iter().map(|entry| entry.unwrap()).collect();
         Ok(listan)
     }
@@ -181,7 +184,7 @@ impl Loghandler {
         let collection = db.collection::<LogEntry>(log_id.as_str());
         let entries = collection.find(doc! {}).run()?;
 
-//        let entries = collection.find(None)?; // return all entries under parent key
+        //        let entries = collection.find(None)?; // return all entries under parent key
         let listan: Vec<LogEntry> = entries.into_iter().map(|entry| entry.unwrap()).collect();
         Ok(listan)
     }
@@ -205,7 +208,7 @@ impl Loghandler {
         let db = self.read_db()?;
         let collection = db.collection::<LogEntry>("logs");
         let entries = collection.find(doc! {}).run()?;
-      //  let books = collection.find(None)?;
+        //  let books = collection.find(None)?;
         let listan: Vec<LogEntry> = entries.into_iter().map(|entry| entry.unwrap()).collect();
 
         Ok(listan)
@@ -380,4 +383,82 @@ fn count_entries(db: &Db) -> usize {
     }
 
     total_entries
+}
+
+impl DBhandle {
+    /// return a sled::Db instance
+    pub fn read_db(&self) -> Result<PoloDB, Error> {
+        let open: PoloDB = Database::open_path("bp_p.db")?;
+        // lets define our merging operations
+        //        let _merge_result = open.set_merge_operator(custom_merge_operator());
+        return Ok(open);
+    }
+    /*
+
+    /// save entry in database
+    pub fn saveurl(&self, longurl: Urldata) -> Result<String, Error> {
+        let url_data = IVec::from(longurl.url.as_bytes());
+        let my_id = generate_random_id();
+
+        let db_instance: Db = self.read_db()?;
+        db_instance.insert(my_id.clone(), url_data)?;
+        db_instance.flush()?;
+        Ok(my_id)
+    }
+    /// return entry in the db
+    pub fn get_entry(&self, key: String) -> Result<String, CrateError> {
+        let db: Db = self.read_db()?; //  lots of io usage
+        match db.get(key.as_bytes()) {
+            Ok(Some(value)) => {
+                let outputen: String = String::from_utf8(value.to_vec()).expect("Invalid UTF-8");
+                return Ok(outputen);
+            }
+            _ => return Err(CrateError::NoEntryInDb),
+        }
+    }
+    /// println! db stats
+    pub fn display_stats(&self) -> Result<(), Error> {
+        let db = self.read_db()?;
+        let amount_of_entries = count_entries(&db);
+        let size = db.size_on_disk()?;
+        println!("[Database Checker] - Metadata stats:");
+        println!(
+            "[Database Checker] - Amount of entries in the database: {:?}",
+            amount_of_entries
+        );
+        println!("[Database Checker] - Size on disk: {:?}", size);
+
+        Ok(())
+    }
+    */
+    /// download scenario from api and decode it to a Graph
+    pub async fn get_remote_entry(&self, key: String) -> Result<Graph, CrateError> {
+        match download_scenario_data(key).await {
+            Ok(value) => {
+                let decoded = decompress_string(value)
+                    .await
+                    .expect("Failed to decompress string, invalid value");
+                println!("decoded at: {}", decoded);
+                let graph: Graph =
+                    serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
+                return Ok(graph);
+            }
+            _ => return Err(CrateError::NoEntryInDb),
+        }
+    }
+    /*
+     /// query for an item and decode it to a Graph
+     pub async fn get_decoded_entry(&self, key: String) -> Result<Graph, CrateError> {
+         let out = self.get_entry(key)?;
+         let decoded = decompress_string(out)
+             .await
+             .expect("Failed to decompress string, invalid value");
+
+         let graph: Graph = serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
+         return Ok(graph);
+     }
+    */
+    pub fn new() -> DBhandle {
+        return DBhandle {};
+    }
 }

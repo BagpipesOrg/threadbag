@@ -24,6 +24,12 @@ pub async fn dot_openchannels() -> HttpResponse {
     HttpResponse::Ok().body("Todo!")
 }
 
+#[get("/version")]
+pub async fn get_version() -> HttpResponse {
+    let version = env!("CARGO_PKG_VERSION");
+    HttpResponse::Ok().body(version)
+}
+
 // broadcast input: {chain: 'hydradx', tx: ''}
 #[post("/broadcast")]
 pub async fn broadcast_tx(_data: web::Json<BroadcastInput>) -> web::Json<BroadcastStatus> {

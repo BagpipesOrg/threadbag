@@ -2,7 +2,8 @@
 #![allow(dead_code)]
 #![allow(unreachable_patterns)]
 
-use crate::error::Error;
+use crate::core::error::Error;
+
 use crate::scenarios::scenario_types::{Graph, Graph2, MultiNodes, ScenarioSummary, TxType};
 use crate::scenarios::scenario_types::{HTTPNode, HTTP_NODE_FORMDATA};
 use getrandom::getrandom;

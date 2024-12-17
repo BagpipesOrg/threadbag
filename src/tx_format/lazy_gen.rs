@@ -2,8 +2,9 @@
 #![allow(non_camel_case_types)]
 #![allow(unreachable_code)]
 
+use crate::core::error::Error;
 use crate::database::types::GetUrlResponse;
-use crate::error::Error;
+
 use reqwest;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};

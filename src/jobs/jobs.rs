@@ -8,7 +8,8 @@
 use crate::chains::chains::get_token_decimals_by_chain_name;
 use crate::database::db::{DBhandler, LogTypes, Loghandler};
 //use crate::database::decode::decompress_string;
-use crate::error::Error;
+use crate::core::error::Error;
+
 use crate::jobs::types::Command;
 use crate::scenarios::pill_parse::process_chain_node;
 use crate::scenarios::scenario_parse::convert_to_multinode;

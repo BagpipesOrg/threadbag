@@ -141,6 +141,11 @@ mod tests {
     }
 
     #[actix_web::test]
+    async fn test_polo() -> Result<(), anyhow::Error> {
+        Ok(())
+    }
+
+    #[actix_web::test]
     async fn test_mulit_type_node() -> Result<(), anyhow::Error> {
         /*
                 println!("Starting test_mulit_type_node");

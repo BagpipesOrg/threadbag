@@ -23,7 +23,8 @@ run_console:
 	tokio-console http://localhost:6666
 
 build_unstable:
-	RUSTFLAGS="--cfg tokio_unstable" cargo build
+	rustup update nightly
+	RUSTFLAGS="--cfg tokio_unstable" cargo +nightly build
 
 install_console:
 	cargo install --locked tokio-console
