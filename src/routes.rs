@@ -1,6 +1,6 @@
 #![allow(unreachable_code)]
 // HTTP Endpoint routes
-use crate::database::db::{string_to_logtype, DBhandler, Loghandler};
+use crate::database::db::{string_to_logtype, DBhandle, Loghandler}; //DBhandler
 use crate::database::decode::decompress_string;
 use crate::database::types::{
     BroadcastInput, BroadcastStatus, GenericOut, GetUrlResponse, LogsOut, ScenarioInfo,
@@ -40,10 +40,7 @@ pub async fn broadcast_tx(_data: web::Json<BroadcastInput>) -> web::Json<Broadca
 }
 
 #[post("/saveUrl")]
-pub async fn save_url(
-    data: web::Json<Urldata>,
-    db: web::Data<DBhandler>,
-) -> web::Json<UrlResponse> {
+pub async fn save_url(data: web::Json<Urldata>, db: web::Data<DBhandle>) -> web::Json<UrlResponse> {
     println!("saveurl: {:?}", data);
     let shortid = db.saveurl(data.into_inner()).expect("Could not save to db");
     println!("Data saved!");
@@ -58,17 +55,18 @@ pub async fn save_url(
 #[get("/getUrl/{name}")]
 pub async fn get_url(
     name: web::Path<String>,
-    db: web::Data<DBhandler>,
+    db: web::Data<DBhandle>,
 ) -> web::Json<GetUrlResponse> {
     let fluff = format!("Todo {name}!");
     println!("{:?}", fluff);
 
     match db.get_entry(name.to_string()) {
         Ok(out) => {
-            println!("Output: {:?}", out);
+            let url = out.longurl;
+            //       println!("Output: {:?}", out);
             return web::Json(GetUrlResponse {
                 success: true,
-                longUrl: out.to_owned(),
+                longUrl: url,
             });
             // return HttpResponse::Ok().body("Found entry!");
         }
@@ -99,7 +97,7 @@ pub async fn stop_job(
     data: web::Json<ScenarioInfo>, // JobStart
     datan: web::Data<Arc<ThreadManager>>,
     _tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
-    _db: web::Data<DBhandler>,
+    _db: web::Data<DBhandle>,
 ) -> web::Json<GenericOut> {
     println!("JobStart called");
     let my_data: ScenarioInfo = data.into_inner();
@@ -130,7 +128,7 @@ pub async fn stop_job(
 pub async fn start_job(
     data: web::Json<ScenarioInfo>, // job_start
     tx: web::Data<tokio::sync::mpsc::Sender<Command>>,
-    _db: web::Data<DBhandler>,
+    _db: web::Data<DBhandle>,
 ) -> web::Json<GenericOut> {
     println!("JobStart called");
     let my_data: ScenarioInfo = data.into_inner();
@@ -184,7 +182,7 @@ curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http:/
 #[post("/scenario/info")]
 pub async fn scenario_info(
     data: web::Json<ScenarioInfo>,
-    db: web::Data<DBhandler>,
+    db: web::Data<DBhandle>,
 ) -> web::Json<ScenarioInfoOut> {
     println!("scenario info got input: {:?}", data);
     let name = data.into_inner().id;
@@ -194,7 +192,7 @@ pub async fn scenario_info(
             println!("Output: {:?}", out);
 
             // decode blob
-            let decoded = decompress_string(out)
+            let decoded = decompress_string(out.longurl)
                 .await
                 .expect("Failed to decompress string, invalid value");
             println!("decoded ok");

@@ -132,9 +132,9 @@ pub async fn download_scenario_data(scenario_id: String) -> Result<String, Error
 
     if response.status().is_success() {
         let response_data: GetUrlResponse = response.json().await?;
-        println!("got response data: {:?}", response_data);
+        //    println!("got response data: {:?}", response_data);
         let long_url = response_data.longUrl;
-        println!("geturl longurl: {}", long_url);
+        //   println!("geturl longurl: {}", long_url);
         return Ok(long_url);
     } else {
         let error_message = response.text().await?;
@@ -237,8 +237,8 @@ pub async fn query_chain(
     };
 
     let url = format!("{}/api/actions/query", get_api_url());
-    println!("request_body: {:?}", request_body);
-    println!("making request: {:?}", url);
+    //   eprintln!("request_body: {:?}", request_body);
+    //   eprintln!("making request: {:?}", url);
     let response = client
         .post(url)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
@@ -247,7 +247,7 @@ pub async fn query_chain(
         .await?;
 
     let body: generic_result = response.json().await?;
-    println!("Response body: {:?}", body);
+    //println!("Response body: {:?}", body);
 
     Ok(body)
 }
