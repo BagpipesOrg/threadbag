@@ -52,7 +52,7 @@ async fn main() -> std::io::Result<()> {
     // let (_panic_sender, mut _panic_receiver): (mpsc::Sender<&str>, mpsc::Receiver<&str>) = mpsc::channel(1);
     let (tx, mut rx) = mpsc::channel::<Command>(32);
     // sled db handler
-    let db_handler = DBhandler {};
+    //  let db_handler = DBhandler {};
 
     // thread manager | latest
     let thread_manager = Arc::new(ThreadManager::new());
@@ -77,7 +77,7 @@ async fn main() -> std::io::Result<()> {
                 .wrap(cors_middleware())
                 .app_data(web::Data::new(tx3_clone.clone()))
                 .app_data(web::Data::new(Arc::clone(&thread_manager)))
-                .app_data(web::Data::new(db_handler.clone()))
+                //               .app_data(web::Data::new(db_handler.clone()))
                 .app_data(web::Data::new(l_db.clone()))
                 .service(xcm_asset_transfer)
                 .service(get_url)

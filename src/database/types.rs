@@ -5,7 +5,7 @@ use crate::scenarios::scenario_types::ScenarioSummary;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Urldata {
     pub url: String,
 }

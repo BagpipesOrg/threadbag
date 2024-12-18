@@ -5,15 +5,19 @@ mod tests {
     // use crate::scenarios::scenario_types::ScenarioSummary;
     //use crate::scenarios::scenario_types::TxType;
 
+    use crate::database::db::{string_to_logtype, Loghandler, ScenarioCollection};
+    use crate::database::types::Urldata;
     use crate::scenarios::pill_parse::{process_chain_node, process_node};
-
-    use crate::database::db::{string_to_logtype, Loghandler};
     use crate::scenarios::scenario_types::{Graph2, MultiNodes};
     use crate::scenarios::websockets::latest_webhookevents;
     use crate::web_server::http::{quick_server, run_webserver, spawn_web_server};
-    use crate::{database::db::DBhandler, tx_format::lazy_gen::query_chain};
+
+    use crate::{
+        database::db::{DBhandle, DBhandler},
+        tx_format::lazy_gen::query_chain,
+    };
     use reqwest;
-    use reqwest::Client;
+    //    use reqwest::Client;
     use serde_json::Value;
     use std::collections::HashMap;
     // use actix_rt::System;
@@ -56,7 +60,8 @@ mod tests {
         println!("output: {:?}", output);
         Ok(())
     }
-    // #[actix_web::test]
+
+    #[actix_web::test]
     async fn test_webserver() -> Result<(), anyhow::Error> {
         //    let _system = System::new();
         println!("starting server");
@@ -141,7 +146,23 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn test_polo() -> Result<(), anyhow::Error> {
+    async fn test_polodb() -> Result<(), anyhow::Error> {
+        let db_h = DBhandle::new();
+        eprintln!("reading db");
+        //   let db: PoloDB = db_h.read_db()?;
+        //PoloDB
+        eprintln!("read db ok");
+        let longurl: Urldata = Urldata {
+            url: "123456789".to_string(),
+        };
+        let scenario_id = db_h.saveurl(longurl.clone())?;
+        eprintln!("saved to db ok");
+        eprintln!("scenarioid: {:?}", scenario_id);
+        let output: ScenarioCollection = db_h.get_entry(scenario_id.clone())?;
+        eprintln!("Comparing database data");
+        assert_eq!(output.scenario_id, scenario_id);
+        assert_eq!(output.longurl, longurl.url);
+        eprintln!("Comparing database data ok");
         Ok(())
     }
 

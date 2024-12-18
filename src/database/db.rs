@@ -25,6 +25,12 @@ pub struct LogEntry {
     pub Date: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ScenarioCollection {
+    pub scenario_id: String,
+    pub longurl: String,
+}
+
 #[derive(Debug)]
 pub enum LogTypes {
     ChainTx,
@@ -81,8 +87,10 @@ pub fn string_to_logtype(input: &str) -> Option<LogTypes> {
 #[derive(Debug, Clone)]
 pub struct DBhandler {}
 
-#[derive(Debug, Clone)]
-pub struct DBhandle {}
+//#[derive(Debug, Clone)]
+pub struct DBhandle {
+    pub db: PoloDB,
+}
 
 fn custom_merge_operator() -> impl Fn(&[u8], Option<&[u8]>, &[u8]) -> Option<Vec<u8>> {
     |_, existing_value, merged_bytes| {
@@ -386,25 +394,42 @@ fn count_entries(db: &Db) -> usize {
 }
 
 impl DBhandle {
-    /// return a sled::Db instance
+    /// return a PoloDB instance
     pub fn read_db(&self) -> Result<PoloDB, Error> {
         let open: PoloDB = Database::open_path("bp_p.db")?;
         // lets define our merging operations
         //        let _merge_result = open.set_merge_operator(custom_merge_operator());
         return Ok(open);
     }
-    /*
 
     /// save entry in database
     pub fn saveurl(&self, longurl: Urldata) -> Result<String, Error> {
-        let url_data = IVec::from(longurl.url.as_bytes());
+        let scenario_collection = self.db.collection::<ScenarioCollection>("scenarios");
         let my_id = generate_random_id();
+        scenario_collection.insert_one(ScenarioCollection {
+            scenario_id: my_id.clone(),
+            longurl: longurl.url,
+        })?;
 
-        let db_instance: Db = self.read_db()?;
-        db_instance.insert(my_id.clone(), url_data)?;
-        db_instance.flush()?;
         Ok(my_id)
     }
+
+    pub fn get_entry(&self, scenario_id: String) -> Result<ScenarioCollection, CrateError> {
+        let scenario_collection = self.db.collection::<ScenarioCollection>("scenarios");
+
+        match scenario_collection.find_one(doc! {"scenario_id": scenario_id}) {
+            Ok(Some(message)) => return Ok(message),
+            Ok(None) => {
+                return Err(CrateError::NoEntryInDb);
+            }
+            Err(err) => {
+                return Err(CrateError::NoEntryInDb);
+            }
+        }
+    }
+
+    /*
+
     /// return entry in the db
     pub fn get_entry(&self, key: String) -> Result<String, CrateError> {
         let db: Db = self.read_db()?; //  lots of io usage
@@ -459,6 +484,7 @@ impl DBhandle {
      }
     */
     pub fn new() -> DBhandle {
-        return DBhandle {};
+        let db: PoloDB = Database::open_path("bp_p.db").unwrap();
+        return DBhandle { db };
     }
 }
