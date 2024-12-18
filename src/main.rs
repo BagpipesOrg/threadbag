@@ -4,6 +4,7 @@ use actix_web::{middleware, web, App, HttpServer};
 //use tokio::time::Duration;
 //use futures::channel::mpsc;
 use actix_cors::Cors;
+use database::db::DBhandle;
 use tokio::sync::mpsc; // use tokio's mpsc channel
                        //use std::collections::HashMap;
 use std::sync::Arc;
@@ -53,7 +54,7 @@ async fn main() -> std::io::Result<()> {
     let (tx, mut rx) = mpsc::channel::<Command>(32);
     // sled db handler
     //  let db_handler = DBhandler {};
-
+    let polo_handler = DBhandle::new();
     // thread manager | latest
     let thread_manager = Arc::new(ThreadManager::new());
     // spawn test thread
@@ -77,6 +78,7 @@ async fn main() -> std::io::Result<()> {
                 .wrap(cors_middleware())
                 .app_data(web::Data::new(tx3_clone.clone()))
                 .app_data(web::Data::new(Arc::clone(&thread_manager)))
+                .app_data(web::Data::new(polo_handler.clone()))
                 //               .app_data(web::Data::new(db_handler.clone()))
                 .app_data(web::Data::new(l_db.clone()))
                 .service(xcm_asset_transfer)

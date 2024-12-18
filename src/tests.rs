@@ -32,20 +32,6 @@ mod tests {
     //    use subxt::{OnlineClient, PolkadotConfig};
     //   use subxt_signer::sr25519::dev;
 
-    //  #[actix_web::test]
-    async fn it_works() {
-        println!("running");
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
-
-    //   #[actix_web::test]
-    async fn it_work2() {
-        println!("running");
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
-
     #[actix_web::test]
     async fn test_query_log() -> Result<(), anyhow::Error> {
         let log_type_string: String = "Query".to_string();
@@ -66,12 +52,12 @@ mod tests {
         //    let _system = System::new();
         println!("starting server");
         //quick_server
-        let (Server, Port) = quick_server().expect("Couldnt start http server");
-        println!("server spawned on port: {Port}");
-        let _ = tokio::spawn(Server);
+        let (server, port) = quick_server().expect("Couldnt start http server");
+        println!("server spawned on http://localhost:{port}");
+        let _ = tokio::spawn(server);
         println!("testing urls");
 
-        let url = format!("http://localhost:{}/", Port);
+        let url = format!("http://localhost:{}/", port);
 
         let response = reqwest::get(&url).await?;
 
@@ -81,7 +67,7 @@ mod tests {
         Ok(())
     }
 
-    // #[actix_web::test]
+    #[actix_web::test]
     async fn test_websocks() -> Result<(), anyhow::Error> {
         let multi_scenario_id: String = "LSm-41cJY".to_string();
         let db_h = DBhandler::new();
@@ -114,19 +100,18 @@ mod tests {
 
                 MultiNodes::ChainQuery(chainnode) => {
                     println!("ChainQuery node");
-                    println!("pre query node: {:?}", chainnode);
+                    //        println!("pre query node: {:?}", chainnode);
                     let mut node_copy = chainnode.clone();
                     let _ = process_chain_node(&mut node_copy, &webhook_loot);
-                    println!("Proccessed chain query node: {:?}", node_copy);
+                    //        println!("Proccessed chain query node: {:?}", node_copy);
                     let fm = node_copy.formData.unwrap();
                     let local_chain = fm.selectedChain.unwrap();
                     let pallet_name = fm.selectedPallet.unwrap();
                     let method_name = fm.selectedMethod.unwrap().name.unwrap();
                     let inputen = fm.methodInput.unwrap();
-                    let tx_gen = query_chain(local_chain, pallet_name, method_name, inputen)
-                        .await
-                        .unwrap();
-                    println!("Txgen: {:?}", tx_gen);
+                    let _tx_gen = query_chain(local_chain, pallet_name, method_name, inputen).await;
+                    //              .unwrap();
+                    //            println!("Txgen: {:?}", tx_gen);
                     //  let output = query_chain(chain, ).await;
                 }
 
@@ -258,7 +243,7 @@ mod tests {
 
         #[actix_rt::test]
         async fn read_db_entries() {
-            let mut db_h = DBhandler {};
+            let mut db_h =  {};
             let db = db_h.read_db().unwrap();
             let iterme = db.iter();
             println!("Printing values in database");

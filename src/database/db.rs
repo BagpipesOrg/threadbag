@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+use std::sync::{Arc, Mutex};
 
 // sled db to store and fetch scenarios
 use crate::core::error::Error as CrateError;
@@ -87,9 +88,10 @@ pub fn string_to_logtype(input: &str) -> Option<LogTypes> {
 #[derive(Debug, Clone)]
 pub struct DBhandler {}
 
-//#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DBhandle {
-    pub db: PoloDB,
+    //  pub db: PoloDB,
+    pub db: Arc<Mutex<PoloDB>>,
 }
 
 fn custom_merge_operator() -> impl Fn(&[u8], Option<&[u8]>, &[u8]) -> Option<Vec<u8>> {
@@ -284,7 +286,7 @@ impl DBhandler {
                 let decoded = decompress_string(value)
                     .await
                     .expect("Failed to decompress string, invalid value");
-                println!("decoded at: {}", decoded);
+                //           println!("decoded at: {}", decoded);
                 let graph: Graph =
                     serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
                 return Ok(graph);
@@ -397,14 +399,13 @@ impl DBhandle {
     /// return a PoloDB instance
     pub fn read_db(&self) -> Result<PoloDB, Error> {
         let open: PoloDB = Database::open_path("bp_p.db")?;
-        // lets define our merging operations
-        //        let _merge_result = open.set_merge_operator(custom_merge_operator());
         return Ok(open);
     }
 
     /// save entry in database
     pub fn saveurl(&self, longurl: Urldata) -> Result<String, Error> {
-        let scenario_collection = self.db.collection::<ScenarioCollection>("scenarios");
+        let db = self.db.lock().unwrap();
+        let scenario_collection = db.collection::<ScenarioCollection>("scenarios");
         let my_id = generate_random_id();
         scenario_collection.insert_one(ScenarioCollection {
             scenario_id: my_id.clone(),
@@ -415,7 +416,8 @@ impl DBhandle {
     }
 
     pub fn get_entry(&self, scenario_id: String) -> Result<ScenarioCollection, CrateError> {
-        let scenario_collection = self.db.collection::<ScenarioCollection>("scenarios");
+        let db = self.db.lock().unwrap();
+        let scenario_collection = db.collection::<ScenarioCollection>("scenarios");
 
         match scenario_collection.find_one(doc! {"scenario_id": scenario_id}) {
             Ok(Some(message)) => return Ok(message),
@@ -423,39 +425,11 @@ impl DBhandle {
                 return Err(CrateError::NoEntryInDb);
             }
             Err(err) => {
-                return Err(CrateError::NoEntryInDb);
+                return Err(CrateError::Polodb(err));
             }
         }
     }
 
-    /*
-
-    /// return entry in the db
-    pub fn get_entry(&self, key: String) -> Result<String, CrateError> {
-        let db: Db = self.read_db()?; //  lots of io usage
-        match db.get(key.as_bytes()) {
-            Ok(Some(value)) => {
-                let outputen: String = String::from_utf8(value.to_vec()).expect("Invalid UTF-8");
-                return Ok(outputen);
-            }
-            _ => return Err(CrateError::NoEntryInDb),
-        }
-    }
-    /// println! db stats
-    pub fn display_stats(&self) -> Result<(), Error> {
-        let db = self.read_db()?;
-        let amount_of_entries = count_entries(&db);
-        let size = db.size_on_disk()?;
-        println!("[Database Checker] - Metadata stats:");
-        println!(
-            "[Database Checker] - Amount of entries in the database: {:?}",
-            amount_of_entries
-        );
-        println!("[Database Checker] - Size on disk: {:?}", size);
-
-        Ok(())
-    }
-    */
     /// download scenario from api and decode it to a Graph
     pub async fn get_remote_entry(&self, key: String) -> Result<Graph, CrateError> {
         match download_scenario_data(key).await {
@@ -471,20 +445,11 @@ impl DBhandle {
             _ => return Err(CrateError::NoEntryInDb),
         }
     }
-    /*
-     /// query for an item and decode it to a Graph
-     pub async fn get_decoded_entry(&self, key: String) -> Result<Graph, CrateError> {
-         let out = self.get_entry(key)?;
-         let decoded = decompress_string(out)
-             .await
-             .expect("Failed to decompress string, invalid value");
 
-         let graph: Graph = serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
-         return Ok(graph);
-     }
-    */
-    pub fn new() -> DBhandle {
+    pub fn new() -> Self {
         let db: PoloDB = Database::open_path("bp_p.db").unwrap();
-        return DBhandle { db };
+        return DBhandle {
+            db: Arc::new(Mutex::new(db)),
+        };
     }
 }
