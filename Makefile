@@ -5,7 +5,7 @@ check:
 	cargo hack check --no-dev-deps --release
 
 test:
-	cargo test -- --nocapture
+	cargo test --release -- --nocapture 
 
 testweb: 
 	cargo test --all-features test_webserver --  --nocapture
@@ -23,8 +23,7 @@ run_console:
 	tokio-console http://localhost:6666
 
 build_unstable:
-	rustup update nightly
-	RUSTFLAGS="--cfg tokio_unstable" cargo +nightly build
+	RUSTFLAGS="--cfg tokio_unstable" cargo build  --features nightly
 
 install_console:
 	cargo install --locked tokio-console

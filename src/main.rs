@@ -47,6 +47,9 @@ async fn main() -> std::io::Result<()> {
     // logger
     std::env::set_var("RUST_LOG", "debug");
     //    env_logger::init();
+    // Enable console-subscriber only on nightly builds
+    // Use env_logger for non-nightly builds
+    #[cfg(feature = "nightly")]
     console_subscriber::init();
     //  print_banner();
     // Explicitly specify the type for the channel
