@@ -7,8 +7,11 @@ use crate::database::types::{
     ScenarioInfoOut, ScenarioLog, TxInfo, TxQueue, UrlResponse, Urldata,
 };
 use crate::jobs::threads::{ThreadManager, ThreadStatus}; // ThreadInfo
-use crate::scenarios::scenario_parse::{multi_scenario_info, scenario_information};
+use crate::scenarios::scenario_parse::{
+    multi_scenario_info, scenario_information, verify_scenario_id,
+};
 use crate::scenarios::scenario_types::{Graph, ScenarioSummary};
+
 use crate::Command;
 use actix_web::{get, post, web, HttpResponse};
 use std::sync::Arc;
@@ -135,6 +138,15 @@ pub async fn start_job(
     println!("data collected");
     let scenario_id = my_data.id;
     println!("start_job id: {:?}", scenario_id);
+    match verify_scenario_id(scenario_id.clone()) {
+        true => {}
+        _ => {
+            return web::Json(GenericOut {
+                success: false,
+                result: "Invalid scenario id".to_string(),
+            });
+        }
+    };
     // let my_delay = my_data.delay;
     // validate input
 
@@ -148,7 +160,12 @@ pub async fn start_job(
         })
         .await
     {
-        Err(_error) => {}
+        Err(_error) => {
+            return web::Json(GenericOut {
+                success: false,
+                result: "could not start job".to_string(),
+            })
+        }
         _ => {}
     };
     return web::Json(GenericOut {
