@@ -156,7 +156,7 @@ pub async fn start_job(
         .send(Command::Start {
             //job: "sending from second handle".to_string(),
             scenario_id: scenario_id,
-            delay: 200u64,
+            delay: 12u64, // 12 hours
         })
         .await
     {
