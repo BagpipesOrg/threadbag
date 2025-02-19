@@ -32,6 +32,7 @@ pub struct ScenarioCollection {
     pub longurl: String,
 }
 
+#[allow(non_camel_case_types)]
 #[derive(Debug)]
 pub enum LogTypes {
     ChainTx,
@@ -40,6 +41,7 @@ pub enum LogTypes {
     HTTP,
     Webhook,
     Debug,
+    xTransfer,
     Unknown,
 }
 
@@ -64,6 +66,9 @@ fn logtypes_to_string(logtype: LogTypes, scenario_id: String) -> String {
         LogTypes::Tx => {
             format!("{}_tx", scenario_id)
         }
+        LogTypes::xTransfer => {
+            format!("{}_xTransfer", scenario_id)
+        }
         LogTypes::Unknown => {
             format!("{}_unknown", scenario_id)
         }
@@ -78,6 +83,7 @@ pub fn string_to_logtype(input: &str) -> Option<LogTypes> {
         "debug" => Some(LogTypes::Debug),
         "http" => Some(LogTypes::HTTP),
         "webhook" => Some(LogTypes::Webhook),
+        "xtransfer" => Some(LogTypes::xTransfer),
         "query" => Some(LogTypes::Query),
         "tx" => Some(LogTypes::Tx),
         "unknown" => Some(LogTypes::Unknown),
@@ -134,7 +140,7 @@ impl Loghandler {
             amount: amount,
             chain: chain,
             txType: tx_type,
-            Date: format!("{:?}", Utc::now()),
+            Date: time_now(),
             tx: tx,
         })?;
         Ok(())

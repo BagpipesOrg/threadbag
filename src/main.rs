@@ -1,5 +1,5 @@
+use crate::core::logging::Logger;
 use crate::database::db::{DBhandler, Loghandler};
-
 use actix_web::{middleware, web, App, HttpServer};
 //use tokio::time::Duration;
 //use futures::channel::mpsc;
@@ -45,9 +45,9 @@ pub fn cors_middleware() -> Cors {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // logger
-    std::env::set_var("RUST_LOG", "debug");
-    //    env_logger::init();
+    Logger::init();
+    let logger = Logger;
+
     // Enable console-subscriber only on nightly builds
     // Use env_logger for non-nightly builds
     #[cfg(feature = "nightly")]
@@ -63,11 +63,9 @@ async fn main() -> std::io::Result<()> {
     let thread_manager = Arc::new(ThreadManager::new());
     // spawn test thread
     thread_manager.spawn("Thread 1".to_string(), async {
+        //   logger.log_debug("Spawning test thread");
         sleep(Duration::from_secs(5 * 1111)).await
     });
-
-    // let subscriber = tracing_subscriber::FmtSubscriber::new();
-    //tracing::subscriber::set_global_default(subscriber)?;
 
     //  let tx2 = tx.clone();
     let tx3 = tx.clone();

@@ -6,7 +6,6 @@ use crate::core::error::Error;
 
 use crate::scenarios::scenario_types::{Graph, Graph2, MultiNodes, ScenarioSummary, TxType};
 use crate::scenarios::scenario_types::{HTTPNode, HTTP_NODE_FORMDATA};
-use getrandom::getrandom;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$*+_-?"; // supported charset
 const ID_LENGTH: usize = 9; // size / length
@@ -150,11 +149,9 @@ pub fn multi_scenario_info(scenario_data: Graph) -> Vec<ScenarioSummary> {
 }
 
 pub fn generate_random_id() -> String {
-    let mut random_bytes = vec![0; ID_LENGTH];
-    getrandom(&mut random_bytes).expect("Failed to generate random bytes");
-
-    // Convert random bytes to a string using the charset
-    let random_id: String = random_bytes
+    let mut buf = [0u8; ID_LENGTH];
+    getrandom::fill(&mut buf).unwrap(); // fix me
+    let random_id: String = buf
         .iter()
         .map(|byte| CHARSET[*byte as usize % CHARSET.len()] as char)
         .collect();
