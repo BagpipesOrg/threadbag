@@ -1,2 +1,2 @@
-pub mod chains;
+pub mod chain_logic;
 pub mod handler;

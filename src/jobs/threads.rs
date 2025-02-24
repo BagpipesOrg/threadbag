@@ -74,7 +74,7 @@ impl ThreadManager {
                 return item.latest_status;
             }
         }
-        return ThreadStatus::NotFound;
+        ThreadStatus::NotFound
     }
 
     /// Get all running threads

@@ -1,7 +1,7 @@
+#[allow(unused_variables, dead_code)]
 //use tracing_subscriber;
 //use tracing_appender::non_blocking::WorkerGuard;
-
-use tracing::{debug, info, Level};
+use tracing::{debug, info}; //Level
 use tracing_appender::rolling;
 use tracing_subscriber::fmt;
 use tracing_subscriber::prelude::*;
@@ -9,6 +9,7 @@ use tracing_subscriber::prelude::*;
 #[derive(Debug, Clone)]
 pub struct Logger;
 
+#[allow(unused_variables, dead_code)]
 impl Logger {
     /// Initialize the logger with a file appender and console output
     pub fn init() {

@@ -25,7 +25,7 @@ use tokio::time::Duration;
 //use std::collections::HashMap;
 
 fn get_api_url() -> String {
-    return "https://api.bagpipes.io".to_string(); //http://localhost:8080
+    "https://api.bagpipes.io".to_string() //http://localhost:8080
 }
 
 // Define the struct representing the response
@@ -142,17 +142,14 @@ pub async fn download_scenario_data(scenario_id: String) -> Result<String, Error
         return Err(Error::NoEntryInDb);
     }
 
-    return Err(Error::NoEntryInDb);
+    Err(Error::NoEntryInDb)
 }
 
 // curl -X POST -H "Content-Type: application/json" -d '{"chain": "polkadot", "msg": "hack the planet"}' http://localhost:8080/api/actions/system-remark    -v
 pub async fn system_remark(chain: String, msg: String) -> Result<generic_result, Error> {
     let client = Client::new();
     println!("System remark called with: {:?} {:?}", chain, msg);
-    let request_body: RemarkRequest = RemarkRequest {
-        chain: chain,
-        msg: msg,
-    };
+    let request_body: RemarkRequest = RemarkRequest { chain, msg };
 
     //   let api_base = get_api_url();//"https://api.bagpipes.io";
     let url = format!("{}/api/actions/system-remark", get_api_url());
@@ -182,9 +179,9 @@ pub async fn hydra_swaps(
     let client = Client::new();
     println!("Input: {:?} {:?} {:?}", assetin, assetout, amount);
     let request_body: SwapRequest = SwapRequest {
-        assetin: assetin,
-        assetout: assetout,
-        amount: amount,
+        assetin,
+        assetout,
+        amount,
     };
 
     // let api_base = ;//"https://api.bagpipes.io";
@@ -215,7 +212,7 @@ pub async fn getwebhook_data(uuid: String) -> Result<SerdeValue, Error> {
 
     let vl: SerdeValue = resp.json().await?;
 
-    return Ok(vl);
+    Ok(vl)
 }
 
 /*
@@ -230,10 +227,10 @@ pub async fn query_chain(
     let client = Client::new();
 
     let request_body: GenQueryGen = GenQueryGen {
-        chain: chain,
-        pallet_name: pallet_name,
-        method_name: method_name,
-        params: params,
+        chain,
+        pallet_name,
+        method_name,
+        params,
     };
 
     let url = format!("{}/api/actions/query", get_api_url());
@@ -267,10 +264,10 @@ pub async fn generic_tx_gen(
     let client = Client::new();
 
     let request_body: GenTxGen = GenTxGen {
-        chain: chain,
-        pallet_name: pallet_name,
-        method_name: method_name,
-        params: params,
+        chain,
+        pallet_name,
+        method_name,
+        params,
     };
 
     let url = format!("{}/api/actions/generic-tx-gen", get_api_url());
