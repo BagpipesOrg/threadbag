@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug)]
 pub enum Error {
     /// serde error
@@ -15,7 +16,7 @@ pub enum Error {
     UnsupportedDestinationChain,
 
     /// Subxt could not draft tx error
-    SubxtError(subxt::Error),
+    Subxt(subxt::Error),
 
     /// Could not extract data from pill node
     PillDataError,
@@ -56,18 +57,18 @@ pub enum Error {
     /// Could not find the storage item
     StorageItemNotFound,
     /// hex crate error
-    HexError(hex::FromHexError),
+    Hex(hex::FromHexError),
     MaxConnectionAttemptsExceeded,
     /// connection to endpoint closed
     ConnectionClosed,
     /// could not get the requested block
     CouldNotGetBlock,
     /// Could not get next item in async loop
-    AsyncNextError,
+    AsyncNext,
     /// Sled database error
     Sled(sled::Error),
     /// Error converting string to u8
-    Utf8StringError(std::string::FromUtf8Error),
+    Utf8String(std::string::FromUtf8Error),
 }
 
 impl From<anyhow::Error> for Error {
@@ -96,7 +97,7 @@ impl From<polodb_core::Error> for Error {
 
 impl From<std::string::FromUtf8Error> for Error {
     fn from(src: std::string::FromUtf8Error) -> Error {
-        Error::Utf8StringError(src)
+        Error::Utf8String(src)
     }
 }
 
@@ -105,14 +106,14 @@ impl std::error::Error for Error {
         match self {
             Error::SerdeJson(e) => Some(e),
             Error::Anyhow(e) => Some(e.as_ref()),
-            Error::SubxtError(e) => Some(e),
+            Error::Subxt(e) => Some(e),
             Error::Polodb(e) => Some(e),
             Error::HTTPRequestProblem(e) => Some(e),
             Error::ReqwestError(e) => Some(e),
             Error::FileIOerror(e) => Some(e),
             Error::Sled(e) => Some(e),
-            Error::HexError(e) => Some(e),
-            Error::Utf8StringError(e) => Some(e),
+            Error::Hex(e) => Some(e),
+            Error::Utf8String(e) => Some(e),
             _ => None,
         }
     }
@@ -127,7 +128,7 @@ impl fmt::Display for Error {
             Error::NoEntryInDb => write!(f, "Could not find entry in database"),
             Error::DecodeProblem => write!(f, "Decode problem"),
             Error::UnsupportedDestinationChain => write!(f, "Unsupported destination chain"),
-            Error::SubxtError(e) => write!(f, "Subxt error: {}", e),
+            Error::Subxt(e) => write!(f, "Subxt error: {}", e),
             Error::PillDataError => write!(f, "Could not extract data from pill node"),
             Error::CantFetchWebhook => write!(f, "Cannot fetch webhook data"),
             Error::ScenarioParseError => write!(f, "Error parsing scenario"),
@@ -145,19 +146,19 @@ impl fmt::Display for Error {
             Error::ErrorEvent => write!(f, "Error getting block events"),
             Error::EventNotFound => write!(f, "Could not find event in latest blocks"),
             Error::StorageItemNotFound => write!(f, "Could not find storage item"),
-            Error::HexError(e) => write!(f, "Hex conversion error: {}", e),
+            Error::Hex(e) => write!(f, "Hex conversion error: {}", e),
             Error::MaxConnectionAttemptsExceeded => write!(f, "Max connection attempts exceeded"),
             Error::ConnectionClosed => write!(f, "Connection to endpoint closed"),
             Error::CouldNotGetBlock => write!(f, "Could not get requested block"),
-            Error::AsyncNextError => write!(f, "Could not get next item in async loop"),
+            Error::AsyncNext => write!(f, "Could not get next item in async loop"),
             Error::Sled(e) => write!(f, "Sled database error: {}", e),
-            Error::Utf8StringError(e) => write!(f, "UTF-8 string conversion error: {}", e),
+            Error::Utf8String(e) => write!(f, "UTF-8 string conversion error: {}", e),
         }
     }
 }
 
 impl From<subxt::Error> for Error {
     fn from(src: subxt::Error) -> Error {
-        Error::SubxtError(src)
+        Error::Subxt(src)
     }
 }

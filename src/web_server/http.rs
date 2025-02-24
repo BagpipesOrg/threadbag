@@ -21,7 +21,7 @@ pub fn spawn_web_server() -> String {
 
     let server = run_webserver(listener).expect("could not run web server");
 
-    let _ = tokio::spawn(server);
+    tokio::spawn(server);
 
     format!("http://127.0.0.1:{}", port)
 }

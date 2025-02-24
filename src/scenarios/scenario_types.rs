@@ -272,6 +272,7 @@ pub enum StringOrNumber {
 }
 
 impl StringOrNumber {
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         match self {
             StringOrNumber::String(s) => s.clone(), // Extract and return the inner String

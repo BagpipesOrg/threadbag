@@ -100,6 +100,7 @@ pub struct DBhandle {
     pub db: Arc<Mutex<PoloDB>>,
 }
 
+#[allow(clippy::type_complexity)]
 fn custom_merge_operator() -> impl Fn(&[u8], Option<&[u8]>, &[u8]) -> Option<Vec<u8>> {
     |_, existing_value, merged_bytes| {
         let mut merged = existing_value.map_or_else(Vec::new, |iv| iv.to_vec());
@@ -114,7 +115,7 @@ pub struct Loghandler {}
 pub fn time_now() -> String {
     let utc: DateTime<Utc> = Utc::now();
 
-    return utc.format("%Y-%m-%dT%H:%M:%SZ").to_string();
+    utc.format("%Y-%m-%dT%H:%M:%SZ").to_string()
 }
 
 /// Polodb
@@ -122,7 +123,7 @@ impl Loghandler {
     /// read the logs.db
     pub fn read_db(&self) -> Result<PoloDB, Error> {
         let open: PoloDB = Database::open_path("logs.db")?;
-        return Ok(open);
+        Ok(open)
     }
     /// insert transaction to the Mempool
     pub fn insert_tx(
@@ -137,11 +138,11 @@ impl Loghandler {
         let tx_pool = format!("{}_txpool", scenario_id);
         let collection = db.collection::<TxInfo>(tx_pool.as_str());
         collection.insert_one(TxInfo {
-            amount: amount,
-            chain: chain,
+            amount,
+            chain,
             txType: tx_type,
             Date: time_now(),
-            tx: tx,
+            tx,
         })?;
         Ok(())
     }
@@ -230,7 +231,13 @@ impl Loghandler {
         Ok(listan)
     }
     pub fn new() -> Loghandler {
-        return Loghandler {};
+        Loghandler {}
+    }
+}
+
+impl Default for Loghandler {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -240,8 +247,8 @@ impl DBhandler {
     pub fn read_db(&self) -> Result<Db, Error> {
         let open: Db = sled::open("bp.db")?;
         // lets define our merging operations
-        let _merge_result = open.set_merge_operator(custom_merge_operator());
-        return Ok(open);
+        open.set_merge_operator(custom_merge_operator());
+        Ok(open)
     }
     /*
         /// decode the ts encoded blob
@@ -266,9 +273,9 @@ impl DBhandler {
         match db.get(key.as_bytes()) {
             Ok(Some(value)) => {
                 let outputen: String = String::from_utf8(value.to_vec()).expect("Invalid UTF-8");
-                return Ok(outputen);
+                Ok(outputen)
             }
-            _ => return Err(CrateError::NoEntryInDb),
+            _ => Err(CrateError::NoEntryInDb),
         }
     }
     /// println! db stats
@@ -295,9 +302,9 @@ impl DBhandler {
                 //           println!("decoded at: {}", decoded);
                 let graph: Graph =
                     serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
-                return Ok(graph);
+                Ok(graph)
             }
-            _ => return Err(CrateError::NoEntryInDb),
+            _ => Err(CrateError::NoEntryInDb),
         }
     }
 
@@ -309,7 +316,7 @@ impl DBhandler {
             .expect("Failed to decompress string, invalid value");
 
         let graph: Graph = serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
-        return Ok(graph);
+        Ok(graph)
     }
     /*     FUNCTIONS MOVED TO LOGHANDLER
         /// save the logs of a thread to a db tree / list
@@ -386,7 +393,13 @@ impl DBhandler {
         }
     */
     pub fn new() -> DBhandler {
-        return DBhandler {};
+        DBhandler {}
+    }
+}
+
+impl Default for DBhandler {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -405,7 +418,7 @@ impl DBhandle {
     /// return a PoloDB instance
     pub fn read_db(&self) -> Result<PoloDB, Error> {
         let open: PoloDB = Database::open_path("bp_p.db")?;
-        return Ok(open);
+        Ok(open)
     }
 
     /// save entry in database
@@ -426,13 +439,9 @@ impl DBhandle {
         let scenario_collection = db.collection::<ScenarioCollection>("scenarios");
 
         match scenario_collection.find_one(doc! {"scenario_id": scenario_id}) {
-            Ok(Some(message)) => return Ok(message),
-            Ok(None) => {
-                return Err(CrateError::NoEntryInDb);
-            }
-            Err(err) => {
-                return Err(CrateError::Polodb(err));
-            }
+            Ok(Some(message)) => Ok(message),
+            Ok(None) => Err(CrateError::NoEntryInDb),
+            Err(err) => Err(CrateError::Polodb(err)),
         }
     }
 
@@ -446,16 +455,22 @@ impl DBhandle {
                 println!("decoded at: {}", decoded);
                 let graph: Graph =
                     serde_json::from_str(decoded.as_str()).expect("Failed to parse JSON");
-                return Ok(graph);
+                Ok(graph)
             }
-            _ => return Err(CrateError::NoEntryInDb),
+            _ => Err(CrateError::NoEntryInDb),
         }
     }
 
     pub fn new() -> Self {
         let db: PoloDB = Database::open_path("bp_p.db").unwrap();
-        return DBhandle {
+        DBhandle {
             db: Arc::new(Mutex::new(db)),
-        };
+        }
+    }
+}
+
+impl Default for DBhandle {
+    fn default() -> Self {
+        Self::new()
     }
 }

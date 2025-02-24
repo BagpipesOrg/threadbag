@@ -206,7 +206,8 @@ fn validate_diagram_data(
     // TODO: Check for multiple paths (Another advanced algorithm)
 
     // Ensure action nodes are not at the start or end
-    if let (Some(starting_node), Some(ending_node)) = (starting_nodes.get(0), ending_nodes.get(0)) {
+    if let (Some(starting_node), Some(ending_node)) = (starting_nodes.first(), ending_nodes.first())
+    {
         if starting_node["type"] == "action" || ending_node["type"] == "action" {
             return Err("Scenarios cannot start or end with an action node.".into());
         }

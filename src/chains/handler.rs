@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 
-use crate::chains::chains::chains;
+use crate::chains::chain_logic::chains;
 
 // one chain handler to rule them all
 pub struct ChainHandler {

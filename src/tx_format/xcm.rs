@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 // xcm transaction generation
 // todo cache the connections
-use crate::chains::chains::chains;
+use crate::chains::chain_logic::chains;
 //use crate::tx_format::generic::{assethubpolkadotconf, polkadotconf};
 use crate::core::error::Error;
 //use hex::FromHex;

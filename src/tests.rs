@@ -22,7 +22,7 @@ mod tests {
     use std::collections::HashMap;
     // use actix_rt::System;
     //    use std::fmt::format;
-    //use crate::chains::chains::{chains, get_rpc_endpoint};
+    //use crate::chains::chain_logic::{chains, get_rpc_endpoint};
     //use crate::database::db::DBhandler;
     //use crate::database::decode::decompress_string;
     //  use crate::scenarios::scenario_types::Graph;

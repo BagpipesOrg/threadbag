@@ -28,6 +28,11 @@ build_unstable:
 install_console:
 	cargo install --locked tokio-console
 
+
+
+clippy:
+	cargo clippy -- -Dwarnings
+
 checkdep:
 	cargo +nightly udeps
 

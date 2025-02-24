@@ -22,7 +22,7 @@ mod tests;
 mod tx_format;
 mod web_server;
 
-use jobs::jobs::{dummy_thread, start_job_worker};
+use jobs::jobs_logic::{dummy_thread, start_job_worker};
 use jobs::threads::ThreadManager;
 use jobs::types::Command;
 
@@ -46,7 +46,7 @@ pub fn cors_middleware() -> Cors {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     Logger::init();
-    let logger = Logger;
+    //  let logger = Logger;
 
     // Enable console-subscriber only on nightly builds
     // Use env_logger for non-nightly builds
@@ -68,8 +68,9 @@ async fn main() -> std::io::Result<()> {
     });
 
     //  let tx2 = tx.clone();
-    let tx3 = tx.clone();
-    let tx3_clone = tx3.clone(); // Clone tx3 before moving it into the closure
+    let tx3 = Arc::new(tx.clone());
+
+    let tx3_clone = tx3.clone(); // This should be same to clone as the channel is Send+Sync
     let l_db: Loghandler = Loghandler::new();
     let http_handle = actix_rt::spawn(async move {
         println!("Running web service on port 8081");
@@ -140,10 +141,9 @@ async fn main() -> std::io::Result<()> {
                     // start_job_worker start_job_worker
                     println!("Starting worker thread");
                     let _worker_thread = actix_rt::spawn(async move {
-                        let _ = match start_job_worker(scenario_id, delay).await {
-                            Err(error) => println!("start job error: {:?}", error),
-                            _ => {}
-                        };
+                        if let Err(error) = start_job_worker(scenario_id, delay).await {
+                            println!("start job error: {:?}", error)
+                        }
                     });
                     println!("worker thread");
                     println!("output: {}", outme);
@@ -157,9 +157,10 @@ async fn main() -> std::io::Result<()> {
     // Wait for all threads to finish
 
     tokio::try_join!(dummy_thread_handle, task_manager_handle)?;
-    let _ = match tokio::try_join!(http_handle) {
-        Err(_error) => {}
-        _ => {}
+
+    if let Err(_error) = tokio::try_join!(http_handle) {
+        println!("Got a joinerror from the http_chandle");
     };
+
     Ok(())
 }

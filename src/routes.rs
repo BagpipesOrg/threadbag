@@ -115,10 +115,30 @@ pub async fn stop_job(
     // send job start command
     println!("route job sending start command");
 
-    return web::Json(GenericOut {
+    web::Json(GenericOut {
         success: true,
         result: "Job stopped".to_string(),
-    });
+    })
+}
+
+/// create a webhook that listens for data
+#[post("/webhook/create")]
+pub async fn creates_webhook() -> web::Json<GenericOut> {
+    //todo!("create webhook and return endpoint ")
+    web::Json(GenericOut {
+        success: false,
+        result: "webhooks is still todo".to_string(),
+    })
+}
+
+/// subscribe to webhook
+#[get("/webhook/sub")]
+pub async fn sub_webhook() -> web::Json<GenericOut> {
+    //  todo!("subscribe  webhook")
+    web::Json(GenericOut {
+        success: false,
+        result: "webhooks is still todo".to_string(),
+    })
 }
 
 /// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWg"}' http://localhost:8081/job/start -v
@@ -152,26 +172,25 @@ pub async fn start_job(
 
     // send job start command
     println!("route job sending start command");
-    let _ = match tx
+
+    if let Err(_error) = tx
         .send(Command::Start {
             //job: "sending from second handle".to_string(),
-            scenario_id: scenario_id,
+            scenario_id,
             delay: 12u64, // 12 hours
         })
         .await
     {
-        Err(_error) => {
-            return web::Json(GenericOut {
-                success: false,
-                result: "could not start job".to_string(),
-            })
-        }
-        _ => {}
+        return web::Json(GenericOut {
+            success: false,
+            result: "could not start job".to_string(),
+        });
     };
-    return web::Json(GenericOut {
+
+    web::Json(GenericOut {
         success: true,
         result: "Job started".to_string(),
-    });
+    })
 }
 
 /// curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWg"}' http://localhost:8081/job/start -v
@@ -184,11 +203,11 @@ pub async fn scenario_transactions(
     let scenario_id = data.into_inner().id;
 
     let output: Vec<TxInfo> = match db.into_inner().get_transactions(scenario_id) {
-        Ok(value) => value.into_iter().map(|entry| entry).collect(),
+        Ok(value) => value.into_iter().collect(),
         _ => Vec::new(),
     };
 
-    return web::Json(TxQueue { mempool: output });
+    web::Json(TxQueue { mempool: output })
 }
 
 /*
@@ -241,11 +260,11 @@ pub async fn scenario_info(
         }
     };
 
-    return web::Json(ScenarioInfoOut {
+    web::Json(ScenarioInfoOut {
         success: false,
         result: None,
         // result: Vec::new(),
-    });
+    })
     //HttpResponse::Ok().body("wip")
 }
 
@@ -267,7 +286,7 @@ pub async fn list_single_thread(
     let scenario_id = postdata.into_inner().id;
     let thread_info = data.get_thread_status(scenario_id);
 
-    return web::Json(thread_info);
+    web::Json(thread_info)
 }
 
 /// curl -X POST -H "Content-Type: application/json" -d '{"id": "LSm-41cJY", "log_type": "query"}' http://localhost:8081/scenario/get_filter_logs
@@ -293,10 +312,10 @@ pub async fn get_filtered_logs(
         Ok(value) => value.into_iter().map(|entry| entry.msg).collect(),
         _ => Vec::new(),
     };
-    return web::Json(LogsOut {
+    web::Json(LogsOut {
         success: true,
         result: output, // can get the dates as well if want to
-    });
+    })
 }
 
 // curl -X POST -H "Content-Type: application/json" -d '{"id": "H!Xz6LWvg"}' http://localhost:8081/scenario/worker/logs -v
@@ -317,17 +336,17 @@ pub async fn get_logs(
         _ => Vec::new(),
     };
     println!("returning query logs");
-    return web::Json(LogsOut {
+    web::Json(LogsOut {
         success: true,
         result: output, // can get the dates as well if want to
-    });
+    })
 }
 
 // test a http action
 #[post("/action/http/dry_run")]
 pub async fn dry_run_http() -> web::Json<GenericOut> {
-    return web::Json(GenericOut {
+    web::Json(GenericOut {
         success: false,
         result: "not found".to_string(),
-    });
+    })
 }

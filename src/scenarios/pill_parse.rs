@@ -123,11 +123,11 @@ pub fn extract_pill(input: String) -> Result<String, Error> {
     match re.captures(input.as_str()) {
         Some(Value) => {
             let first = Value.get(1).expect("could not extract pill node").as_str();
-            let out = format!("{}", first);
-            return Ok(out);
+            let out = first.to_string();
+            Ok(out)
         }
 
-        _ => return Err(Error::PillDataError),
+        _ => Err(Error::PillDataError),
     }
 }
 
@@ -156,13 +156,14 @@ impl PillParse {
         PillParse { input }
     }
 
+    #[allow(clippy::invalid_regex)]
     pub fn contains_process() {
         let _pill_regex = Regex::new(
             r#"<span[^>]*data-id="([^"]+)"[^>]*data-nodeindex="(\d+)"[^>]*>([^<]+)</span>"#,
         )
-        .unwrap();
+        .unwrap(); // change me
     }
-
+    #[allow(clippy::invalid_regex)]
     pub fn sanitize_value(value: &str) -> String {
         let sanitized_value = Regex::new(r#"<div[^>]*>(.*?)</div>"#)
             .unwrap()
