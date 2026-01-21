@@ -1,6 +1,6 @@
-# Threadbag  
+# ThreadBag  
 
-Threadbag - Persistence execution for Bagpipes
+ThreadBag - Persistence execution for Bagpipes
 
 ```ascii
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
